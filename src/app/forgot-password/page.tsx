@@ -24,19 +24,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       await sendPasswordResetEmail(auth, email);
+    } catch {
+      // Errore non mostrato per non rivelare se l'email è registrata
+    } finally {
+      // Messaggio generico indipendentemente dall'esito (sicurezza: no user enumeration)
       toast({
         title: "Email inviata",
-        description: `Abbiamo inviato le istruzioni per il reset della password a ${email}`,
-      });
-    } catch (error: unknown) {
-      const code = (error as { code?: string })?.code;
-      toast({
-        variant: "destructive",
-        title: "Errore",
-        description:
-          code === "auth/user-not-found"
-            ? "Nessun account trovato con questa email."
-            : "Impossibile inviare l'email. Riprova più tardi.",
+        description: "Se l'indirizzo è registrato, riceverai un link per reimpostare la password.",
       });
     } finally {
       setIsLoading(false);

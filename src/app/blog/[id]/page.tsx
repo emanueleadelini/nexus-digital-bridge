@@ -78,7 +78,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ id: string 
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-secondary" />
-                5 min di lettura
+                {Math.max(1, Math.ceil((post.content?.split(' ').length || 0) / 200))} min di lettura
               </div>
             </div>
           </div>

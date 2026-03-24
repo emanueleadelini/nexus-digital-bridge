@@ -18,6 +18,9 @@ import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
 
+// Rimuove caratteri HTML pericolosi per prevenire XSS
+const sanitize = (str: string) => str.replace(/[<>"'`]/g, '').trim();
+
 export default function RegisterPage() {
   const [role, setRole] = useState<string>("company");
   const [email, setEmail] = useState("");
@@ -93,7 +96,7 @@ export default function RegisterPage() {
       const user = userCredential.user;
 
       const userRole = role.charAt(0).toUpperCase() + role.slice(1);
-      const displayName = role === "company" ? companyName.trim() : instituteName.trim();
+      const displayName = sanitize(role === "company" ? companyName : instituteName);
 
       // Scrittura atomica: profilo utente e dati specifici ruolo
       const profilePath = role === "company" ? "companies" : "institutes";
@@ -116,8 +119,8 @@ export default function RegisterPage() {
           email: email.trim().toLowerCase(),
           role: userRole,
           status: "Pending",
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
+          firstName: sanitize(firstName),
+          lastName: sanitize(lastName),
           createdAt: serverTimestamp(),
         }),
         setDoc(doc(db, profilePath, user.uid), profileData),

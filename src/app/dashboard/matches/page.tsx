@@ -45,9 +45,9 @@ function calculateMatchScore(student: StudentCV, companySectors: string[]): { sc
   if (!studentSectors.length || !companySectors.length) return { score: 0, common: [] };
   
   const common = companySectors.filter(s => studentSectors.includes(s));
-  
-  // Score base sulla copertura dei settori (max 90%)
-  const sectorCoverage = common.length / companySectors.length;
+
+  // Score base sulla copertura dei settori (max 90%) — bilanciato su entrambi i profili
+  const sectorCoverage = common.length / Math.max(companySectors.length, studentSectors.length);
   let score = sectorCoverage * 90;
 
   // Bonus Intelligenza Testuale (max +10%)

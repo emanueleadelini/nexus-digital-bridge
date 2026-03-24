@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminInstituteTypesPage() {
   const db = useFirestore();
@@ -26,12 +27,17 @@ export default function AdminInstituteTypesPage() {
   const { data: types, isLoading } = useCollection(typesRef);
 
   const handleAdd = async () => {
-    if (!newType || !typesRef) return;
+    const trimmed = newType.trim();
+    if (!trimmed || !typesRef) return;
+    if (types?.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast({ variant: "destructive", title: "Duplicato", description: `"${trimmed}" esiste già.` });
+      return;
+    }
     setIsAdding(true);
     try {
-      await addDoc(typesRef, { name: newType });
+      await addDoc(typesRef, { name: trimmed });
       setNewType("");
-      toast({ title: "Tipologia aggiunta", description: `${newType} è ora disponibile nel sistema.` });
+      toast({ title: "Tipologia aggiunta", description: `${trimmed} è ora disponibile nel sistema.` });
     } catch (error) {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiungere la tipologia." });
     } finally {
@@ -110,14 +116,23 @@ export default function AdminInstituteTypesPage() {
                     <TableRow key={type.id} className="hover:bg-blue-50/50">
                       <TableCell className="font-medium text-slate-700">{type.name}</TableCell>
                       <TableCell className="text-right flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-slate-400 hover:text-destructive"
-                          onClick={() => handleDelete(type.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminare la tipologia?</AlertDialogTitle>
+                              <AlertDialogDescription>"{type.name}" verrà rimossa. Gli istituti che la usano non saranno aggiornati automaticamente.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(type.id)}>Elimina</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))

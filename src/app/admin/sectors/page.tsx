@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
 import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminSectorsPage() {
   const db = useFirestore();
@@ -26,12 +27,17 @@ export default function AdminSectorsPage() {
   const { data: sectors, isLoading } = useCollection(sectorsRef);
 
   const handleAdd = async () => {
-    if (!newSector || !sectorsRef) return;
+    const trimmed = newSector.trim();
+    if (!trimmed || !sectorsRef) return;
+    if (sectors?.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+      toast({ variant: "destructive", title: "Duplicato", description: `"${trimmed}" esiste già.` });
+      return;
+    }
     setIsAdding(true);
     try {
-      await addDoc(sectorsRef, { name: newSector });
+      await addDoc(sectorsRef, { name: trimmed });
       setNewSector("");
-      toast({ title: "Settore aggiunto", description: `${newSector} è ora disponibile nel sistema.` });
+      toast({ title: "Settore aggiunto", description: `${trimmed} è ora disponibile nel sistema.` });
     } catch (error) {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiungere il settore." });
     } finally {
@@ -110,14 +116,23 @@ export default function AdminSectorsPage() {
                     <TableRow key={sector.id} className="hover:bg-blue-50/50">
                       <TableCell className="font-medium text-slate-700">{sector.name}</TableCell>
                       <TableCell className="text-right flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-slate-400 hover:text-destructive"
-                          onClick={() => handleDelete(sector.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-slate-400 hover:text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminare il settore?</AlertDialogTitle>
+                              <AlertDialogDescription>"{sector.name}" verrà rimosso. Gli utenti che lo usano non saranno aggiornati automaticamente.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(sector.id)}>Elimina</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))

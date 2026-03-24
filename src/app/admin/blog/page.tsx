@@ -23,6 +23,7 @@ import { Newspaper, Plus, Trash2, Calendar, User, Eye, Loader2 } from "lucide-re
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import Link from "next/link";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export default function AdminBlogPage() {
   const db = useFirestore();
@@ -56,7 +57,7 @@ export default function AdminBlogPage() {
     try {
       await addDoc(blogRef, {
         ...newPost,
-        tags: newPost.tags.split(",").map(t => t.trim()),
+        tags: newPost.tags.split(",").map(t => t.trim()).filter(t => t.length > 0),
         publishedAt: serverTimestamp(),
       });
       toast({ title: "Articolo pubblicato", description: "Il nuovo post è ora visibile sul blog." });
@@ -210,9 +211,23 @@ export default function AdminBlogPage() {
                             <Eye className="w-4 h-4 text-primary" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(post.id)}>
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminare questo articolo?</AlertDialogTitle>
+                              <AlertDialogDescription>Questa azione è irreversibile. L'articolo "{post.title}" verrà eliminato definitivamente.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(post.id)}>Elimina</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   ))

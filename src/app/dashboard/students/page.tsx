@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileText, Plus, Search, User, X, Loader2, Trash2, Sparkles, Upload } from "lucide-react";
 import { useState, useRef } from "react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
@@ -336,14 +337,23 @@ export default function StudentsPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right px-8">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-slate-300 hover:text-destructive hover:bg-red-50 rounded-xl transition-all" 
-                          onClick={() => handleDelete(student.id)}
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-destructive hover:bg-red-50 rounded-xl transition-all">
+                              <Trash2 className="w-5 h-5" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Eliminare questo studente?</AlertDialogTitle>
+                              <AlertDialogDescription>Il profilo di <strong>{student.name}</strong> verrà rimosso definitivamente dal database e non sarà più visibile nelle ricerche aziendali.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Annulla</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(student.id)}>Elimina</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </TableCell>
                     </TableRow>
                   )) : (

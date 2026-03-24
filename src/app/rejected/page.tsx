@@ -24,7 +24,7 @@ export default function RejectedPage() {
               <Mail className="w-8 h-8 text-destructive" />
               <div className="text-sm">
                  <div className="font-bold text-red-800">Serve assistenza?</div>
-                 <div className="text-red-600">Scrivi a emanueleadelini@gmail.com per chiarimenti.</div>
+                 <div className="text-red-600">Scrivi a {process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'info@nexusdigitalbridge.it'} per chiarimenti.</div>
               </div>
             </div>
             <Button variant="outline" className="w-full rounded-xl" asChild>
