@@ -1,0 +1,136 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Legge il ruolo dal documento users/{uid} — stesso campo usato dall'app
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'Admin';
+    }
+
+    function isApproved() {
+      return isSignedIn() && getUserData().status == 'Approved';
+    }
+
+    function isInstitute() {
+      return isSignedIn() && getUserData().role == 'Institute';
+    }
+
+    // ==========================================
+    // COLLECTION RULES
+    // ==========================================
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /companies/{companyId} {
+      allow get, list: if isApproved() || isAdmin();
+      allow create: if isOwner(companyId) || isAdmin();
+      allow update: if (isOwner(companyId) && isApproved()) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /institutes/{instituteId} {
+      allow get, list: if isApproved() || isAdmin();
+      allow create: if isOwner(instituteId) || isAdmin();
+      allow update: if (isOwner(instituteId) && isApproved()) || isAdmin();
+      allow delete: if isAdmin();
+
+      match /studentCVs/{studentCVId} {
+        allow get, list: if isApproved() || isAdmin();
+        allow create: if (isOwner(instituteId) && isInstitute() && isApproved()) || isAdmin();
+        allow update: if (isOwner(instituteId) && isInstitute() && isApproved()) || isAdmin();
+        allow delete: if isOwner(instituteId) || isAdmin();
+      }
+    }
+
+    // Necessario per collectionGroup('studentCVs') usato nel matching
+    match /{path=**}/studentCVs/{studentCVId} {
+      allow get, list: if isApproved() || isAdmin();
+    }
+
+    match /sectors/{sectorId} {
+      allow read: if true; // Necessario durante la registrazione (utente non ancora approvato)
+      allow write: if isAdmin();
+    }
+
+    match /instituteTypes/{typeId} {
+      allow read: if true; // Necessario durante la registrazione
+      allow write: if isAdmin();
+    }
+
+    match /config/{configId} {
+      allow get: if true;
+      allow write: if isAdmin();
+    }
+
+    match /blogPosts/{postId} {
+      allow get, list: if true;
+      allow write: if isAdmin();
+    }
+
+    match /chats/{chatId} {
+      function isChatParticipant() {
+        return isSignedIn() && (
+          request.auth.uid == resource.data.companyId ||
+          request.auth.uid == resource.data.instituteId
+        );
+      }
+
+      // NOTA: Firestore non supporta resource.data nelle regole 'list'.
+      // La sicurezza si basa sul client che usa SEMPRE where(companyId/instituteId == uid).
+      // I messaggi (subcollection) sono comunque protetti tramite get() del doc parent.
+      allow list: if isApproved() || isAdmin();
+
+      allow get: if isChatParticipant() || isAdmin();
+
+      // Il creatore deve essere uno dei partecipanti della chat
+      allow create: if isSignedIn() && isApproved() && (
+        request.resource.data.companyId == request.auth.uid ||
+        request.resource.data.instituteId == request.auth.uid
+      );
+
+      // Partecipanti possono aggiornare lastMessage/lastMessageTime, ma non gli ID
+      allow update: if (isChatParticipant() || isAdmin()) &&
+        request.resource.data.companyId == resource.data.companyId &&
+        request.resource.data.instituteId == resource.data.instituteId;
+
+      allow delete: if isAdmin();
+
+      // Subcollection messaggi — sicurezza forte via get() sul doc parent
+      match /messages/{msgId} {
+        // Lettura: solo partecipanti verificati sulla chat parent, o admin
+        allow read: if isSignedIn() && isApproved() && (
+          get(/databases/$(database)/documents/chats/$(chatId)).data.companyId == request.auth.uid ||
+          get(/databases/$(database)/documents/chats/$(chatId)).data.instituteId == request.auth.uid ||
+          isAdmin()
+        );
+
+        // Scrittura: solo partecipanti, e senderId deve corrispondere all'utente autenticato
+        allow create: if isSignedIn() && isApproved() && (
+          get(/databases/$(database)/documents/chats/$(chatId)).data.companyId == request.auth.uid ||
+          get(/databases/$(database)/documents/chats/$(chatId)).data.instituteId == request.auth.uid
+        ) && request.resource.data.senderId == request.auth.uid;
+
+        // Messaggi immutabili — nessun edit o delete
+        allow update, delete: if false;
+      }
+    }
+  }
+}

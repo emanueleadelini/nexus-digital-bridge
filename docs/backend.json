@@ -1,0 +1,416 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user within the Nexus Digital Bridge platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "User's role within the platform (e.g., Company, Institute, Admin)."
+        },
+        "status": {
+          "type": "string",
+          "description": "Approval status of the user.",
+          "enum": ["Pending", "Approved", "Rejected"]
+        },
+        "companyId": {
+          "type": "string",
+          "description": "Reference to Company. (Relationship: User 1:1 Company) Nullable for non-company users."
+        },
+        "instituteId": {
+          "type": "string",
+          "description": "Reference to Institute. (Relationship: User 1:1 Institute) Nullable for non-institute users."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "role",
+        "status"
+      ]
+    },
+    "Company": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Company",
+      "type": "object",
+      "description": "Represents a company profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the company entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Company name."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Approved", "Rejected"]
+        },
+        "vatNumber": {
+          "type": "string",
+          "description": "Company VAT number."
+        },
+        "address": {
+          "type": "string",
+          "description": "Company address."
+        },
+        "website": {
+          "type": "string",
+          "description": "Company website URL.",
+          "format": "uri"
+        },
+        "description": {
+          "type": "string",
+          "description": "Company description."
+        },
+        "sectorIds": {
+          "type": "array",
+          "description": "References to Sectors. (Relationship: Company N:N Sector)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sectorIds"
+      ]
+    },
+    "Institute": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Institute",
+      "type": "object",
+      "description": "Represents an institute profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the institute entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Institute name."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["Pending", "Approved", "Rejected"]
+        },
+        "address": {
+          "type": "string",
+          "description": "Institute address."
+        },
+        "types": {
+          "type": "array",
+          "description": "Types of institute (e.g., Liceo, Istituto Tecnico). Multiple selection allowed.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sectorIds": {
+          "type": "array",
+          "description": "References to Sectors. (Relationship: Institute N:N Sector)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "types",
+        "sectorIds"
+      ]
+    },
+    "StudentCV": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StudentCV",
+      "type": "object",
+      "description": "Represents a student CV profile.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the student CV entity."
+        },
+        "instituteId": {
+          "type": "string",
+          "description": "Reference to Institute. (Relationship: Institute 1:N StudentCV)"
+        },
+        "cvInformation": {
+          "type": "string",
+          "description": "CV information (e.g., skills, experience, education)."
+        },
+        "sectorIds": {
+          "type": "array",
+          "description": "References to Sectors. (Relationship: StudentCV N:N Sector)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "instituteId",
+        "cvInformation"
+      ]
+    },
+    "Sector": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sector",
+      "type": "object",
+      "description": "Represents an industry sector.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the sector entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Sector name (e.g., Automotive, Manufacturing)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Sector description."
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "InstituteType": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "InstituteType",
+      "type": "object",
+      "description": "Represents a type of school/institute.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "description": "Type name (e.g., Liceo Scientifico)." }
+      },
+      "required": ["id", "name"]
+    },
+    "Chat": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Chat",
+      "type": "object",
+      "description": "Represents a chat conversation between a company and an institute.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat entity."
+        },
+        "companyId": {
+          "type": "string",
+          "description": "Reference to Company. (Relationship: Company 1:N Chat)"
+        },
+        "instituteId": {
+          "type": "string",
+          "description": "Reference to Institute. (Relationship: Institute 1:N Chat)"
+        },
+        "studentCVId": {
+          "type": "string",
+          "description": "Reference to StudentCV. (Relationship: StudentCV 1:N Chat). Optional: can be null if the chat is not about a specific student"
+        },
+        "messages": {
+          "type": "array",
+          "description": "Messages of the chat",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "companyId",
+        "instituteId"
+      ]
+    },
+    "BlogPost": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "BlogPost",
+      "type": "object",
+      "description": "Represents an article in the platform's blog.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "description": "The headline of the article." },
+        "excerpt": { "type": "string", "description": "A short summary for the preview card." },
+        "content": { "type": "string", "description": "The full text of the article." },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "author": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "title", "content", "publishedAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Includes approval status.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/companies/{companyId}",
+        "definition": {
+          "entityName": "Company",
+          "schema": {
+            "$ref": "#/backend/entities/Company"
+          },
+          "description": "Stores company profiles.",
+          "params": [
+            {
+              "name": "companyId",
+              "description": "The unique identifier for the company."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/institutes/{instituteId}",
+        "definition": {
+          "entityName": "Institute",
+          "schema": {
+            "$ref": "#/backend/entities/Institute"
+          },
+          "description": "Stores institute profiles.",
+          "params": [
+            {
+              "name": "instituteId",
+              "description": "The unique identifier for the institute."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/institutes/{instituteId}/studentCVs/{studentCVId}",
+        "definition": {
+          "entityName": "StudentCV",
+          "schema": {
+            "$ref": "#/backend/entities/StudentCV"
+          },
+          "description": "Stores student CV profiles.",
+          "params": [
+            {
+              "name": "instituteId",
+              "description": "The unique identifier for the institute."
+            },
+            {
+              "name": "studentCVId",
+              "description": "The unique identifier for the student CV."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sectors/{sectorId}",
+        "definition": {
+          "entityName": "Sector",
+          "schema": {
+            "$ref": "#/backend/entities/Sector"
+          },
+          "description": "Stores sector information.",
+          "params": [
+            {
+              "name": "sectorId",
+              "description": "The unique identifier for the sector."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/instituteTypes/{typeId}",
+        "definition": {
+          "entityName": "InstituteType",
+          "schema": {
+            "$ref": "#/backend/entities/InstituteType"
+          },
+          "description": "Stores institute types.",
+          "params": [
+            {
+              "name": "typeId",
+              "description": "The unique identifier for the type."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/chats/{chatId}",
+        "definition": {
+          "entityName": "Chat",
+          "schema": {
+            "$ref": "#/backend/entities/Chat"
+          },
+          "description": "Stores chat conversations.",
+          "params": [
+            {
+              "name": "chatId",
+              "description": "The unique identifier for the chat."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "role",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Indicates admin status.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/blogPosts/{postId}",
+        "definition": {
+          "entityName": "BlogPost",
+          "schema": {
+            "$ref": "#/backend/entities/BlogPost"
+          },
+          "description": "Stores blog articles.",
+          "params": [
+            {
+              "name": "postId",
+              "description": "The unique identifier for the blog post."
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

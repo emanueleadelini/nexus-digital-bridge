@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "Professional handshake between a student and a business professional in a modern setting",
+      "imageUrl": "https://images.unsplash.com/photo-1521737711867-e3b97375f902?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBidXNpbmVzc3xlbnwwfHx8fDE3NzAyODQ5NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "education business"
+    },
+    {
+      "id": "company-avatar",
+      "description": "Corporate office building icon",
+      "imageUrl": "https://images.unsplash.com/photo-1549637642-90187f64f420?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjb3Jwb3JhdGUlMjBvZmZpY2V8ZW58MHx8fHwxNzcwMjg0OTU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corporate office"
+    },
+    {
+      "id": "institute-avatar",
+      "description": "Classic school building icon",
+      "imageUrl": "https://images.unsplash.com/photo-1590579906355-9ea60292515b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8dW5pdmVyc2l0eSUyMGJ1aWxkaW5nfGVufDB8fHx8MTc3MDIwMjg3MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "university building"
+    },
+    {
+      "id": "student-avatar",
+      "description": "Student portrait placeholder",
+      "imageUrl": "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzdHVkZW50JTIwcG9ydHJhaXR8ZW58MHx8fHwxNzcwMjYzNTkxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "student portrait"
+    }
+  ]
+}
