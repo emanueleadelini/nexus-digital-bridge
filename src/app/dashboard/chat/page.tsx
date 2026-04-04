@@ -37,6 +37,22 @@ function ChatContent() {
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const companiesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "companies");
+  }, [db, user]);
+
+  const institutesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "institutes");
+  }, [db, user]);
+
+  const { data: companies } = useCollection(companiesRef);
+  const { data: institutes } = useCollection(institutesRef);
+
+  const companyNameById = Object.fromEntries((companies || []).map(c => [c.id, c.name as string]));
+  const instituteNameById = Object.fromEntries((institutes || []).map(i => [i.id, i.name as string]));
+
   const targetInstituteId = searchParams.get("institute");
   const targetStudentId = searchParams.get("student");
   const chatIdFromUrl = searchParams.get("chatId");
@@ -116,8 +132,7 @@ function ChatContent() {
       });
       setActiveChatId(newChatRef.id);
       toast({ title: "Chat avviata", description: "Ora puoi dialogare con l'istituto." });
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile avviare la chat." });
     } finally {
       setIsCreatingChat(false);
@@ -145,8 +160,7 @@ function ChatContent() {
         lastMessageTime: serverTimestamp(),
         lastSenderId: user.uid,
       });
-    } catch (error) {
-      console.error(error);
+    } catch {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile inviare il messaggio." });
       setNewMessage(text);
     }
@@ -193,15 +207,13 @@ function ChatContent() {
                     <div className="flex-1 min-w-0">
                       <span className="font-bold text-sm block truncate">
                         {role === "Company"
-                          ? "Istituto Partner"
+                          ? (instituteNameById[chat.instituteId] || "Istituto Partner")
                           : role === "Institute"
-                          ? "Azienda Interessata"
-                          : `Chat ${chat.id.slice(-4)}`}
+                          ? (companyNameById[chat.companyId] || "Azienda Interessata")
+                          : `${companyNameById[chat.companyId] || chat.companyId?.slice(0, 8)} ↔ ${instituteNameById[chat.instituteId] || chat.instituteId?.slice(0, 8)}`}
                       </span>
                       <span className="text-[10px] text-slate-400 block truncate">
-                        {role === "Admin"
-                          ? `A: ${chat.companyId?.slice(0, 6)} — I: ${chat.instituteId?.slice(0, 6)}`
-                          : (chat.lastMessage || "Conversazione avviata")}
+                        {chat.lastMessage || "Conversazione avviata"}
                       </span>
                     </div>
                   </div>
@@ -228,15 +240,15 @@ function ChatContent() {
                 <div>
                   <div className="font-bold text-primary">
                     {role === "Company"
-                      ? "Contatto Istituto"
+                      ? (instituteNameById[activeChat.instituteId] || "Istituto Partner")
                       : role === "Institute"
-                      ? "Contatto Azienda"
+                      ? (companyNameById[activeChat.companyId] || "Azienda Interessata")
                       : "Monitoraggio Admin"}
                   </div>
                   <div className="text-xs text-slate-500">
                     {activeChat.studentCVId
                       ? "Oggetto: Interesse Profilo Studente"
-                      : "Informazioni Generali"}
+                      : "Conversazione Generale"}
                   </div>
                 </div>
               </div>

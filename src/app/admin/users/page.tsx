@@ -66,9 +66,9 @@ export default function AdminUsersPage() {
       if (userData?.email) {
         const userName = userData.firstName || 'Utente';
         if (status === 'Approved') {
-          sendApprovalEmail(userData.email, userName).catch(console.error);
+          sendApprovalEmail(userData.email, userName).catch(() => {});
         } else if (status === 'Rejected') {
-          sendRejectionEmail(userData.email, userName).catch(console.error);
+          sendRejectionEmail(userData.email, userName).catch(() => {});
         }
       }
 

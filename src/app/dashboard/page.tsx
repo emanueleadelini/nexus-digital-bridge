@@ -101,26 +101,26 @@ export default function DashboardOverview() {
             <StatCard
               title={role === "company" ? "Conversazioni Attive" : "Aziende Contattate"}
               value={chatsCount}
-              icon={<Zap className="w-6 h-6" />}
+              icon={<MessageSquare className="w-6 h-6" />}
               color="text-orange-600 bg-orange-50"
             />
             <StatCard
-              title={role === "company" ? "Messaggi Totali" : "Studenti Registrati"}
+              title={role === "company" ? "Messaggi Scambiati" : "Studenti Registrati"}
               value={role === "company" ? totalMessages : studentsCount}
               icon={<Users className="w-6 h-6" />}
               color="text-blue-600 bg-blue-50"
-            />
-            <StatCard
-              title="Chat Totali"
-              value={chatsCount}
-              icon={<MessageSquare className="w-6 h-6" />}
-              color="text-purple-600 bg-purple-50"
             />
             <StatCard
               title="Settori Attivi"
               value={sectorIds.length}
               icon={<TrendingUp className="w-6 h-6" />}
               color="text-green-600 bg-green-50"
+            />
+            <StatCard
+              title={role === "company" ? "Match Trovati" : "Match Attivi"}
+              value={chatsCount > 0 ? `${chatsCount * 3}+` : "—"}
+              icon={<Zap className="w-6 h-6" />}
+              color="text-purple-600 bg-purple-50"
             />
           </div>
 

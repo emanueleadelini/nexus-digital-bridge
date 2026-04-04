@@ -23,8 +23,8 @@ import {
   ListTree
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
+import { doc, collection, query, where } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 
 const commonLinks = [
@@ -73,6 +73,21 @@ export function DashboardSidebar() {
   // Determina il ruolo in base al profilo Firestore, con fallback
   const role = (userProfile?.role?.toLowerCase() as "company" | "institute" | "admin") || "company";
 
+  // Conteggio utenti in attesa (solo per admin)
+  const pendingCompaniesRef = useMemoFirebase(() => {
+    if (!db || !user || role !== "admin") return null;
+    return query(collection(db, "companies"), where("status", "==", "Pending"));
+  }, [db, user, role]);
+
+  const pendingInstitutesRef = useMemoFirebase(() => {
+    if (!db || !user || role !== "admin") return null;
+    return query(collection(db, "institutes"), where("status", "==", "Pending"));
+  }, [db, user, role]);
+
+  const { data: pendingCompanies } = useCollection(pendingCompaniesRef);
+  const { data: pendingInstitutes } = useCollection(pendingInstitutesRef);
+  const pendingCount = (pendingCompanies?.length || 0) + (pendingInstitutes?.length || 0);
+
   const links = [
     ...(role === "admin" ? adminLinks : [
       ...commonLinks,
@@ -113,20 +128,26 @@ export function DashboardSidebar() {
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
-            
+            const showBadge = link.href === "/admin/users" && pendingCount > 0;
+
             return (
               <Link
                 key={link.name}
                 href={link.href}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all group",
-                  isActive 
-                    ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                  isActive
+                    ? "bg-primary text-white shadow-lg shadow-primary/20"
                     : "text-slate-400 hover:bg-slate-800 hover:text-white"
                 )}
               >
                 <Icon className={cn("w-5 h-5", isActive ? "text-secondary" : "group-hover:text-secondary")} />
-                {link.name}
+                <span className="flex-1">{link.name}</span>
+                {showBadge && (
+                  <span className="bg-orange-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             );
           })}

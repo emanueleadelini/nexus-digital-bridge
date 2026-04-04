@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Briefcase, GraduationCap, Loader2, Check, AlertCircle } from "lucide-react";
+import { Briefcase, GraduationCap, Loader2, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
@@ -126,8 +127,8 @@ export default function RegisterPage() {
         setDoc(doc(db, profilePath, user.uid), profileData),
       ]);
 
-      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(console.error);
-      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(console.error);
+      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(() => {});
+      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(() => {});
 
       toast({ title: "Registrazione avvenuta", description: "Account in fase di verifica." });
       router.push("/dashboard");
@@ -206,7 +207,12 @@ export default function RegisterPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password <span className="text-slate-400 font-normal">(min. 8 caratteri)</span></Label>
-                      <Input id="password" type="password" required minLength={8} maxLength={128} className="rounded-xl" value={password} onChange={(e) => setPassword(e.target.value)} />
+                      <div className="relative">
+                        <Input id="password" type={showPassword ? "text" : "password"} required minLength={8} maxLength={128} className="rounded-xl pr-12" value={password} onChange={(e) => setPassword(e.target.value)} />
+                        <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" tabIndex={-1}>
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
