@@ -203,7 +203,7 @@ export default function Home() {
             <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-slate-400 text-sm">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/terms" className="hover:text-white transition-colors">Termini di Servizio</Link>
-              <Link href="#" className="hover:text-white transition-colors">Contatti</Link>
+              <Link href="mailto:info@nexusdigitalbridge.it" className="hover:text-white transition-colors">Contatti</Link>
               <Link 
                 href="/login" 
                 className="flex items-center gap-1.5 text-slate-500 hover:text-secondary transition-colors font-medium border-l border-slate-700 pl-6"

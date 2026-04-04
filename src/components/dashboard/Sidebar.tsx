@@ -165,14 +165,16 @@ export function DashboardSidebar() {
 
         <div className="mt-auto pt-4 border-t border-slate-800">
           <div className="flex items-center gap-3 px-4 py-3 text-slate-400">
-            <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white uppercase">
-              {role.substring(0, 2)}
+            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shrink-0">
+              {(userProfile?.firstName?.[0] || '') + (userProfile?.lastName?.[0] || '') || role.substring(0, 2)}
             </div>
             <div className="flex-1 overflow-hidden">
               <div className="text-sm font-bold text-white truncate">
-                {userProfile?.firstName || 'Utente'}
+                {userProfile?.firstName && userProfile?.lastName
+                  ? `${userProfile.firstName} ${userProfile.lastName}`
+                  : userProfile?.firstName || 'Utente'}
               </div>
-              <div className="text-xs truncate capitalize">{role}</div>
+              <div className="text-[10px] truncate capitalize text-slate-500">{role}</div>
             </div>
           </div>
         </div>
