@@ -127,9 +127,19 @@ export default function AdminUsersPage() {
                 <TabsList className="bg-slate-100 p-1 rounded-xl">
                   <TabsTrigger value="companies" className="rounded-lg gap-2">
                     <Building2 className="w-4 h-4" /> Aziende
+                    {companies?.filter(c => c.status === 'Pending').length ? (
+                      <span className="ml-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {companies.filter(c => c.status === 'Pending').length}
+                      </span>
+                    ) : null}
                   </TabsTrigger>
                   <TabsTrigger value="institutes" className="rounded-lg gap-2">
                     <Users className="w-4 h-4" /> Istituti
+                    {institutes?.filter(i => i.status === 'Pending').length ? (
+                      <span className="ml-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {institutes.filter(i => i.status === 'Pending').length}
+                      </span>
+                    ) : null}
                   </TabsTrigger>
                 </TabsList>
 

@@ -64,7 +64,8 @@ export default function SearchInstitutesPage() {
   const filteredInstitutes = useMemo(() => {
     if (!institutes) return [];
     return institutes.filter(inst => {
-      const matchesSearch = inst.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      if (inst.isDemo) return false;
+      const matchesSearch = inst.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            inst.address?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === "all" || inst.types?.includes(filterType);
       return matchesSearch && matchesType;

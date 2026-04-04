@@ -94,9 +94,9 @@ export default function AdminDashboardPage() {
   const { data: types } = useCollection(typesRef);
 
   const stats = {
-    companies: companies?.length || 0,
-    institutes: institutes?.length || 0,
-    matches: (companies?.length || 0) * 2,
+    companies: companies?.filter(c => !c.isDemo).length || 0,
+    institutes: institutes?.filter(i => !i.isDemo).length || 0,
+    matches: (companies?.filter(c => !c.isDemo).length || 0) * (institutes?.filter(i => !i.isDemo).length || 0),
     sectors: sectors?.length || 0
   };
 

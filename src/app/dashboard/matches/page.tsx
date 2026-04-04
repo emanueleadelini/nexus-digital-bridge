@@ -90,6 +90,7 @@ export default function MatchesPage() {
     if (userProfile.role === "Company") {
       const companySectors = (details as CompanyProfile).sectorIds || [];
       return allStudents
+        .filter(s => !s.isDemo)
         .map(student => {
           const { score, common } = calculateMatchScore(student, companySectors);
           return { student, matchScore: score, commonSectors: common } as MatchResult;
@@ -98,15 +99,19 @@ export default function MatchesPage() {
         .sort((a, b) => b.matchScore - a.matchScore);
     } else {
       return allStudents
-        .filter(s => s.instituteId === user?.uid)
+        .filter(s => s.instituteId === user?.uid && !s.isDemo)
         .map(student => ({ student, matchScore: 100, commonSectors: student.sectorIds || [] }));
     }
   }, [userProfile, allStudents, details, user]);
 
   const filteredMatches = useMemo(() => {
-    return matches.filter(m => 
-      m.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      m.commonSectors.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+    if (!searchTerm) return matches;
+    const term = searchTerm.toLowerCase();
+    return matches.filter(m =>
+      m.student.name.toLowerCase().includes(term) ||
+      m.student.class?.toLowerCase().includes(term) ||
+      m.commonSectors.some(s => s.toLowerCase().includes(term)) ||
+      m.student.cvInformation?.toLowerCase().includes(term)
     );
   }, [matches, searchTerm]);
 
@@ -118,10 +123,21 @@ export default function MatchesPage() {
     return (
       <div className="flex min-h-screen bg-slate-50">
         <DashboardSidebar />
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto" />
-            <p className="text-slate-500 font-medium">Analisi affinità in corso...</p>
+        <main className="flex-1 p-8">
+          <div className="max-w-6xl mx-auto space-y-8 animate-pulse">
+            <div className="flex justify-between items-center">
+              <div className="space-y-2">
+                <div className="h-9 w-72 bg-slate-200 rounded-xl" />
+                <div className="h-4 w-48 bg-slate-100 rounded-lg" />
+              </div>
+              <div className="h-9 w-48 bg-green-100 rounded-full" />
+            </div>
+            <div className="h-12 w-80 bg-slate-200 rounded-xl" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="h-64 bg-slate-200 rounded-3xl" />
+              ))}
+            </div>
           </div>
         </main>
       </div>

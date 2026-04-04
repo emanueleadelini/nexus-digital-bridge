@@ -15,13 +15,27 @@ export default function AdminChatsPage() {
   const db = useFirestore();
   const { user, isUserLoading: authLoading } = useUser();
 
-  // Carichiamo tutte le chat del sistema
   const chatsRef = useMemoFirebase(() => {
     if (!db || !user) return null;
     return collection(db, "chats");
   }, [db, user]);
 
+  const companiesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "companies");
+  }, [db, user]);
+
+  const institutesRef = useMemoFirebase(() => {
+    if (!db || !user) return null;
+    return collection(db, "institutes");
+  }, [db, user]);
+
   const { data: chats, isLoading: collectionLoading } = useCollection(chatsRef);
+  const { data: companies } = useCollection(companiesRef);
+  const { data: institutes } = useCollection(institutesRef);
+
+  const companyNameById = Object.fromEntries((companies || []).map(c => [c.id, c.name]));
+  const instituteNameById = Object.fromEntries((institutes || []).map(i => [i.id, i.name]));
 
   const isLoading = authLoading || (!!user && collectionLoading);
 
@@ -55,8 +69,8 @@ export default function AdminChatsPage() {
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead>Azienda (ID)</TableHead>
-                  <TableHead>Istituto (ID)</TableHead>
+                  <TableHead>Azienda</TableHead>
+                  <TableHead>Istituto</TableHead>
                   <TableHead>Ultimo Messaggio</TableHead>
                   <TableHead className="text-right">Azioni</TableHead>
                 </TableRow>
@@ -68,13 +82,17 @@ export default function AdminChatsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2 font-bold text-slate-700">
                           <Building2 className="w-4 h-4 text-primary" />
-                          <span className="truncate max-w-[150px]">{chat.companyId}</span>
+                          <span className="truncate max-w-[150px]">
+                            {companyNameById[chat.companyId] || chat.companyId}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 font-bold text-slate-700">
-                          < GraduationCap className="w-4 h-4 text-secondary" />
-                          <span className="truncate max-w-[150px]">{chat.instituteId}</span>
+                          <GraduationCap className="w-4 h-4 text-secondary" />
+                          <span className="truncate max-w-[150px]">
+                            {instituteNameById[chat.instituteId] || chat.instituteId}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>

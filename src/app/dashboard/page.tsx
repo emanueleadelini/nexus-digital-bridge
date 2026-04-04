@@ -57,8 +57,20 @@ export default function DashboardOverview() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-slate-50">
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <DashboardSidebar />
+        <main className="flex-1 p-8">
+          <div className="max-w-6xl mx-auto space-y-8 animate-pulse">
+            <div className="h-10 w-64 bg-slate-200 rounded-xl" />
+            <div className="grid md:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-slate-200 rounded-2xl" />
+              ))}
+            </div>
+            <div className="grid lg:grid-cols-2 gap-8">
+              <div className="h-64 bg-slate-200 rounded-2xl" />
+              <div className="h-64 bg-slate-200 rounded-2xl" />
+            </div>
+          </div>
         </main>
       </div>
     );

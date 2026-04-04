@@ -69,6 +69,11 @@ export default function StudentsPage() {
       return;
     }
 
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ variant: "destructive", title: "File troppo grande", description: "Il PDF non può superare i 10MB. Comprimi il file e riprova." });
+      return;
+    }
+
     setIsParsing(true);
     setParsingStatus("Caricamento documento...");
     
