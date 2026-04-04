@@ -7,7 +7,6 @@
  * 2. Generare un riassunto professionale orientato alle aziende.
  * 3. Suggerire i settori merceologici Confindustria più affini basandosi sulle esperienze.
  */
-
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { INDUSTRY_SECTORS } from '@/lib/constants';
@@ -41,19 +40,22 @@ const parseCVFlow = ai.defineFlow(
   },
   async (input) => {
     const response = await ai.generate({
-      prompt: `Sei un esperto di selezione del personale e orientamento scolastico per la piattaforma "Nexus Digital Bridge".
+      prompt: [
+        {
+          text: `Sei un esperto di selezione del personale e orientamento scolastico per la piattaforma "Nexus Digital Bridge".
 Analizza questo CV Europass e estrai le informazioni in modo professionale.
-
 REGOLE DI ESTRAZIONE:
 1. Nome: Estrai solo nome e cognome.
 2. Classe: Identifica l'ultimo anno di corso o l'indirizzo di studi (es. 5A Informatica).
 3. Sommario: Scrivi 3-4 righe che valorizzino il talento dello studente per una possibile azienda, evidenziando le hard skills.
 4. Settori Suggeriti: Scegli ESCLUSIVAMENTE tra questa lista ufficiale di settori Confindustria:
-${INDUSTRY_SECTORS.join(", ")}
-
-Documento CV (PDF): {{media url=pdfDataUri}}`,
-      input: { pdfDataUri: input.pdfDataUri },
-      output: { schema: ParseCVOutputSchema }
+${INDUSTRY_SECTORS.join(", ")}`,
+        },
+        {
+          media: { url: input.pdfDataUri },
+        },
+      ],
+      output: { schema: ParseCVOutputSchema },
     });
 
     if (!response.output) {

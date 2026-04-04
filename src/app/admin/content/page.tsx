@@ -107,7 +107,7 @@ export default function AdminContentPage() {
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-slate-50">
-        <DashboardSidebar role="admin" />
+        <DashboardSidebar />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </main>
@@ -117,7 +117,7 @@ export default function AdminContentPage() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <DashboardSidebar role="admin" />
+      <DashboardSidebar />
       <main className="flex-1 p-8">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="flex justify-between items-center">
@@ -268,3 +268,4 @@ export default function AdminContentPage() {
     </div>
   );
 }
+

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 export default function AdminPanoramicaPage() {
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <DashboardSidebar role="admin" />
+      <DashboardSidebar />
       <main className="flex-1 p-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <div className="flex justify-between items-center">

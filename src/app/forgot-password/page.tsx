@@ -32,7 +32,6 @@ export default function ForgotPasswordPage() {
         title: "Email inviata",
         description: "Se l'indirizzo è registrato, riceverai un link per reimpostare la password.",
       });
-    } finally {
       setIsLoading(false);
     }
   };
