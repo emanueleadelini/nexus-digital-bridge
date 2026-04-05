@@ -4,11 +4,11 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, GraduationCap, Handshake, Zap, Calendar, ArrowRight, Lock } from "lucide-react";
+import { Briefcase, GraduationCap, Handshake, Zap, Calendar, ArrowRight, Lock, UserPlus, Settings2, ChevronRight, Mail } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, orderBy, limit } from "firebase/firestore";
+import { doc, collection, query, orderBy, limit, where } from "firebase/firestore";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
@@ -26,8 +26,20 @@ export default function Home() {
     return query(collection(db, "blogPosts"), orderBy("publishedAt", "desc"), limit(3));
   }, [db]);
 
+  const companiesRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "companies"), where("isDemo", "!=", true));
+  }, [db]);
+
+  const institutesRef = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collection(db, "institutes"), where("isDemo", "!=", true));
+  }, [db]);
+
   const { data: config } = useDoc(configRef);
   const { data: posts } = useCollection(blogRef);
+  const { data: companies } = useCollection(companiesRef);
+  const { data: institutes } = useCollection(institutesRef);
 
   const heroPlaceholder = PlaceHolderImages.find(img => img.id === 'hero-bg');
 
@@ -104,8 +116,41 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Come Funziona Section */}
+      <section id="come-funziona" className="py-24 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <h2 className="text-3xl lg:text-4xl font-headline font-bold text-primary">Come Funziona</h2>
+            <p className="text-slate-500 text-lg">
+              Tre passi semplici per connettere talento e opportunità in modo intelligente.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            <div className="hidden md:block absolute top-12 left-1/3 right-1/3 h-0.5 bg-slate-100 z-0" />
+            <HowItWorksStep
+              number={1}
+              icon={<UserPlus className="w-6 h-6" />}
+              title="Registrati"
+              description="Crea il tuo account come Azienda o Istituto. Il team Nexus verifica il tuo profilo entro 24 ore."
+            />
+            <HowItWorksStep
+              number={2}
+              icon={<Settings2 className="w-6 h-6" />}
+              title="Configura il Profilo"
+              description="Indica i settori merceologici Confindustria di interesse. Gli istituti caricano i CV Europass degli studenti con parsing AI."
+            />
+            <HowItWorksStep
+              number={3}
+              icon={<Zap className="w-6 h-6" />}
+              title="Connettiti"
+              description="L'algoritmo Nexus 3.0 calcola la compatibilità e ti suggerisce i match migliori. Inizia subito una conversazione diretta."
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-slate-50">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
             <h2 className="text-3xl lg:text-4xl font-headline font-bold text-primary">{content.featuresTitle}</h2>
@@ -138,10 +183,10 @@ export default function Home() {
       <section className="py-20 bg-slate-50 border-y">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <StatItem label={content.s1Label} value={content.s1Value} />
-            <StatItem label={content.s2Label} value={content.s2Value} />
-            <StatItem label={content.s3Label} value={content.s3Value} />
-            <StatItem label={content.s4Label} value={content.s4Value} />
+            <StatItem label="Aziende Registrate" value={companies ? `${companies.length}+` : (content.s1Value)} />
+            <StatItem label="Istituti Partner" value={institutes ? `${institutes.length}+` : (content.s2Value)} />
+            <StatItem label="Settori Confindustria" value="13" />
+            <StatItem label={content.s4Label} value={config?.stat4Value || "100+"} />
           </div>
         </div>
       </section>
@@ -193,28 +238,71 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="w-8 h-8 text-secondary" />
-              <span className="font-headline font-bold text-2xl">Nexus Digital Bridge</span>
+      <footer className="bg-slate-900 text-white">
+        <div className="container mx-auto px-4 py-16">
+          <div className="grid md:grid-cols-3 gap-12">
+            {/* Col sinistra */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="bg-secondary text-white p-1.5 rounded-lg">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <span className="font-headline font-bold text-xl">Nexus Digital Bridge</span>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                La piattaforma italiana per il matching intelligente tra scuole e aziende. Valorizziamo il talento degli studenti attraverso tecnologia e connessioni reali.
+              </p>
             </div>
-            <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-slate-400 text-sm">
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white transition-colors">Termini di Servizio</Link>
-              <Link href="mailto:info@nexusdigitalbridge.it" className="hover:text-white transition-colors">Contatti</Link>
-              <Link 
-                href="/login" 
-                className="flex items-center gap-1.5 text-slate-500 hover:text-secondary transition-colors font-medium border-l border-slate-700 pl-6"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                Area Riservata Admin
-              </Link>
+
+            {/* Col centro */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-slate-400">Link Utili</h3>
+              <ul className="space-y-2">
+                {[
+                  { label: "Home", href: "/" },
+                  { label: "Chi Siamo", href: "/about" },
+                  { label: "Prezzi", href: "/pricing" },
+                  { label: "Blog", href: "/blog" },
+                  { label: "Privacy Policy", href: "/privacy" },
+                  { label: "Termini di Servizio", href: "/terms" },
+                ].map(({ label, href }) => (
+                  <li key={href}>
+                    <Link href={href} className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1.5">
+                      <ChevronRight className="w-3 h-3" />
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <div className="text-slate-500 text-sm">
-              © 2026 Nexus Digital Bridge. Tutti i diritti riservati.
+
+            {/* Col destra */}
+            <div className="space-y-4">
+              <h3 className="font-bold text-sm uppercase tracking-widest text-slate-400">Contatti</h3>
+              <div className="space-y-3">
+                <a href="mailto:info@nexusdigitalbridge.it" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm">
+                  <Mail className="w-4 h-4 shrink-0" />
+                  info@nexusdigitalbridge.it
+                </a>
+                <div className="text-slate-500 text-sm pt-2">
+                  Sviluppato da <span className="text-secondary font-semibold">AD Next Lab</span>
+                </div>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-1.5 text-slate-500 hover:text-secondary transition-colors text-xs font-medium"
+                >
+                  <Lock className="w-3 h-3" />
+                  Area Riservata Admin
+                </Link>
+              </div>
             </div>
+          </div>
+        </div>
+        <div className="border-t border-slate-800">
+          <div className="container mx-auto px-4 py-5">
+            <p className="text-slate-500 text-xs text-center">
+              © 2026 Nexus Digital Bridge by AD Next Lab — Tutti i diritti riservati.
+            </p>
           </div>
         </div>
       </footer>
@@ -241,6 +329,23 @@ function StatItem({ label, value }: { label: string, value: string }) {
     <div className="space-y-1">
       <div className="text-4xl font-bold text-primary font-headline">{value}</div>
       <div className="text-slate-500 font-medium">{label}</div>
+    </div>
+  );
+}
+
+function HowItWorksStep({ number, icon, title, description }: { number: number; icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="relative z-10 flex flex-col items-center text-center space-y-4 p-6">
+      <div className="relative">
+        <div className="w-20 h-20 rounded-full bg-secondary text-white flex items-center justify-center shadow-lg shadow-secondary/20">
+          {icon}
+        </div>
+        <div className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-primary text-white text-xs font-bold flex items-center justify-center border-2 border-white">
+          {number}
+        </div>
+      </div>
+      <h3 className="text-xl font-bold font-headline text-primary">{title}</h3>
+      <p className="text-slate-500 leading-relaxed text-sm">{description}</p>
     </div>
   );
 }

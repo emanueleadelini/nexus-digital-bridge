@@ -25,6 +25,15 @@ export function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-6">
+            <Link href="/#come-funziona" className="text-sm font-medium hover:text-primary transition-colors">
+              Come Funziona
+            </Link>
+            <Link href="/about" className="text-sm font-medium hover:text-primary transition-colors">
+              Chi Siamo
+            </Link>
+            <Link href="/pricing" className="text-sm font-medium hover:text-primary transition-colors">
+              Prezzi
+            </Link>
             <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
               Aziende
             </Link>
@@ -51,6 +60,9 @@ export function Navbar() {
 
       {isMenuOpen && (
         <div className="md:hidden border-t bg-white px-4 py-4 space-y-2">
+          <Link href="/#come-funziona" className="block px-3 py-2 text-base font-medium hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>Come Funziona</Link>
+          <Link href="/about" className="block px-3 py-2 text-base font-medium hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>Chi Siamo</Link>
+          <Link href="/pricing" className="block px-3 py-2 text-base font-medium hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>Prezzi</Link>
           <Link href="/login" className="block px-3 py-2 text-base font-medium hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>Aziende</Link>
           <Link href="/login" className="block px-3 py-2 text-base font-medium hover:bg-muted rounded-md" onClick={() => setIsMenuOpen(false)}>Istituti</Link>
           <hr />

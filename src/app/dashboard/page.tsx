@@ -2,7 +2,7 @@
 
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Zap, Users, MessageSquare, TrendingUp, Bell, Building2, Loader2 } from "lucide-react";
+import { Zap, Users, MessageSquare, TrendingUp, Bell, Building2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
@@ -10,6 +10,7 @@ import { collection, query, where, doc } from "firebase/firestore";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import type { CompanyProfile, InstituteProfile } from "@/types";
+import { useState, useEffect } from "react";
 
 export default function DashboardOverview() {
   const { user, userProfile, isLoading } = useAuthGuard();
@@ -76,11 +77,63 @@ export default function DashboardOverview() {
     );
   }
 
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (userProfile?.status === "Approved") {
+      const dismissed = localStorage.getItem("onboarding_dismissed");
+      if (dismissed !== "true") {
+        setShowWelcome(true);
+      }
+    }
+  }, [userProfile]);
+
+  function handleDismissWelcome() {
+    localStorage.setItem("onboarding_dismissed", "true");
+    setShowWelcome(false);
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <DashboardSidebar />
       <main className="flex-1 p-8">
         <div className="max-w-6xl mx-auto space-y-8">
+
+          {showWelcome && (
+            <div className="relative bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-8 text-white shadow-xl overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+              <button
+                onClick={handleDismissWelcome}
+                className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+                aria-label="Chiudi benvenuto"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="relative z-10 space-y-4">
+                <h2 className="text-2xl font-headline font-bold">Benvenuto su Nexus Digital Bridge! 🎉</h2>
+                <p className="text-blue-100 text-sm">Segui questi passi per iniziare al meglio:</p>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {(role === "company"
+                    ? [
+                        "1. Completa il profilo azienda",
+                        "2. Esplora i Match",
+                        "3. Contatta un Istituto",
+                      ]
+                    : [
+                        "1. Completa il profilo istituto",
+                        "2. Carica i CV degli studenti",
+                        "3. Aspetta le aziende interessate",
+                      ]
+                  ).map((step, i) => (
+                    <div key={i} className="bg-white/10 rounded-2xl px-4 py-3 text-sm font-medium">
+                      {step}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <h1 className="text-3xl font-headline font-bold text-primary">Panoramica Dashboard</h1>
