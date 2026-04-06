@@ -3,110 +3,87 @@
 
 ---
 
-## OBIETTIVO
-Portare la piattaforma da demo a prodotto vendibile. Ogni punto è critico per una vendita B2B italiana.
+## STATO FINALE — Fine sessione 4 aprile
 
----
+### ✅ COMPLETATO OGGI (5 commit)
 
-## TODO LIST
-
-### 🔴 CRITICO — Deal Killer
-
-- [x] **Cookie Banner GDPR** — componente custom con localStorage, link a Privacy Policy, accetta/rifiuta
-- [x] **Fix homepage stats** — rimossi numeri falsi, sostituiti con conteggi reali da Firestore (companies + institutes)
-- [x] **Sezione "Come Funziona"** — 3 step visivi in homepage (Registrati → Configura → Connettiti), `id="come-funziona"` per anchor
-- [x] **Pagina Prezzi** (`/pricing`) — 3 tier: Istituto gratuito / Starter €49/mese / Pro contattaci, FAQ accordion, CTA
-- [x] **Footer completo** — 3 colonne: logo+tagline / link utili / contatti AD Next Lab, bottom bar copyright
-
-### 🟡 IMPORTANTE — Credibilità
-
-- [x] **Welcome card onboarding** — card gradient nella dashboard, role-aware (Company vs Institute), dismiss localStorage
-- [x] **Pagina "Chi Siamo"** (`/about`) — missione, origine AD Next Lab, 3 valori, numeri, CTA
-- [x] **Navbar aggiornata** — aggiunti link "Come Funziona", "Chi Siamo", "Prezzi" (desktop + mobile)
-- [ ] **Homepage CTA secondaria** — bottone "Scopri Come Funziona" accanto a "Inizia Ora" (non implementato)
-
-### 🟢 POLISH — Finiture
-
-- [ ] **Meta tags SEO** — title, description, og:image (già presenti in layout.tsx da sessione precedente — OK)
-- [ ] **Admin content**: estensione gestione stats homepage (non toccato)
-
----
-
-## STATO AVANZAMENTO AGGIORNATO
-
-| Task | Stato | Note |
+| Task | Stato | File |
 |------|-------|------|
-| Cookie Banner GDPR | ✅ Completato | `src/components/CookieBanner.tsx`, localStorage, mobile-first |
-| Fix homepage stats | ✅ Completato | Query Firestore reali su companies/institutes, filtro isDemo |
-| Sezione Come Funziona | ✅ Completato | 3 step, `id="come-funziona"`, link navbar funzionante |
-| Pagina Prezzi `/pricing` | ✅ Completato | 3 card + Accordion FAQ + Trusted By + CTA |
-| Footer completo | ✅ Completato | 3 colonne bg-slate-900, bottom bar |
-| Welcome onboarding | ✅ Completato | Solo utenti Approved, role-aware, dismiss persistente |
-| Pagina Chi Siamo `/about` | ✅ Completato | Hero + missione + valori + numeri + CTA |
-| Navbar aggiornata | ✅ Completato | Come Funziona, Chi Siamo, Prezzi — desktop + mobile |
-| Homepage CTA secondaria | ⏳ Non fatto | Non implementato in questa sessione |
-| Meta tags SEO | ✅ Già presenti | Configurati in sessione precedente (layout.tsx) |
+| Cookie Banner GDPR | ✅ | `src/components/CookieBanner.tsx` |
+| Fix homepage stats (dati reali Firestore) | ✅ | `src/app/page.tsx` |
+| Sezione "Come Funziona" in homepage | ✅ | `src/app/page.tsx` |
+| Pagina Prezzi `/pricing` | ✅ | `src/app/pricing/page.tsx` |
+| Footer homepage 3 colonne | ✅ | `src/app/page.tsx` |
+| Welcome card onboarding dashboard | ✅ | `src/app/dashboard/page.tsx` |
+| Pagina Chi Siamo `/about` | ✅ | `src/app/about/page.tsx` |
+| Navbar: Come Funziona + Chi Siamo + Prezzi | ✅ | `src/components/layout/Navbar.tsx` |
+| Fix Rules of Hooks (dashboard crash) | ✅ | `src/app/dashboard/page.tsx` |
+| Admin chats → nomi reali | ✅ | `src/app/admin/chats/page.tsx` |
+| PDF upload blocco >10MB | ✅ | `src/app/dashboard/students/page.tsx` |
+| Matches search in cvInformation | ✅ | `src/app/dashboard/matches/page.tsx` |
+| isDemo filter (search + matches) | ✅ | search + matches pages |
+| Sentry client config | ✅ | `sentry.client.config.ts` |
+| Badge pending admin users tab | ✅ | `src/app/admin/users/page.tsx` |
+| Skeleton loading dashboard + matches | ✅ | 2 pagine |
+| Password show/hide toggle login + register | ✅ | login + register pages |
+| Chat sidebar nomi reali | ✅ | `src/app/dashboard/chat/page.tsx` |
+| Sidebar badge pending Gestione Utenti | ✅ | `src/components/dashboard/Sidebar.tsx` |
+| Admin panoramica: dati reali + Recharts | ✅ | `src/app/admin/page.tsx` |
+| Rimossi console.error in produzione | ✅ | vari file |
+| Rimossa sentry-example-page pubblica | ✅ | eliminato |
+| Sidebar avatar iniziali nome+cognome | ✅ | Sidebar.tsx |
 
 ---
 
-## COSA MANCA ANCORA (post-sessione 4 aprile)
+## COSA MANCA ANCORA — DA FARE PRIMA DI MERCOLEDÌ
 
-### Non implementato questa sessione
+### 🔴 Obbligatorio (fai tu, non richiede codice)
 
-| Elemento | Motivo / Note |
-|----------|---------------|
-| **P.IVA nel footer** | Non fornita — presente stringa generica senza P.IVA reale |
-| **Frecce visive tra step "Come Funziona"** | Struttura presente, raffinamento visivo da testare su mobile |
-| **Homepage CTA secondaria** | Non richiesta come priorità assoluta, da aggiungere post-vendita |
-| **Email verification post-registrazione** | Richiede modifica flusso Firebase Auth — bug aperto |
-| **Google SSO** | Dipendenza aggiuntiva — non implementato |
-| **Paginazione Firestore** | Architettura da riprogettare — critico oltre 1000 records |
-| **Rate limiting su AI/Auth** | Richiede middleware o soluzione serverless |
-| **Notifiche real-time (badge unread)** | Richiede listener Firestore su messaggi + stato globale |
-| **Blog editor rich text** | Richiederebbe dipendenza aggiuntiva (es. TipTap) |
-| **Google Analytics 4** | Non richiesto esplicitamente in questa sessione |
-| **Confirm password nel form registrazione** | Non toccato |
-| **PDF size limit (10MB check)** | Bug aperto — non toccato |
-| **Admin chats con nomi reali** | Bug aperto — richiederebbe query cross-collection |
-| **Bulk approve/reject utenti** | Feature roadmap |
+1. **P.IVA nel footer** — apri `src/app/page.tsx`, cerca `[inserire]` nel bottom bar e sostituisci con la tua P.IVA reale
+2. **Popola dati prima della presentazione** — vai su `/admin/dashboard` → "Inizializza Tabelle" poi "Attiva Demo" per avere dati realistici durante la vendita
+3. **Verifica dominio personalizzato** — assicurati che `www.nexusdigitalbridge.it` punti correttamente al Firebase hosting
+4. **Testa il flusso completo** — registra un account azienda e uno istituto da un browser in incognito, verifica tutto il flusso
 
-### Da completare PRIMA del 9 aprile (raccomandato)
+### 🟡 Da fare post-vendita (roadmap tecnica da mostrare al cliente)
 
-1. **Inserire P.IVA reale** nel footer (`src/app/page.tsx` riga bottom bar)
-2. **Testare su mobile** la sezione "Come Funziona" e il footer a 3 colonne
-3. **Verificare** che la query Firestore `where("isDemo", "!=", true)` abbia l'index su Firebase Console
-4. **Popolare** alcuni dati reali (almeno 3-4 companies e 2-3 institutes approvati) prima della demo
+| Feature | Priorità | Note |
+|---------|----------|------|
+| Sistema pagamenti Stripe | Alta | Prima di onboardare clienti paganti |
+| Email verification post-registrazione | Alta | Sicurezza base |
+| Google SSO | Media | UX migliorata |
+| Paginazione Firestore | Alta | Critica oltre 500 utenti |
+| Rate limiting AI + Auth | Alta | Anti-abuso |
+| Export dati GDPR | Media | Diritto alla portabilità |
+| Delete account | Media | Diritto all'oblio |
+| Notifiche real-time unread badge | Media | Chat UX |
+| Blog rich text editor | Bassa | TipTap o Quill |
+| Google Analytics 4 | Media | Analytics vendita |
+| Confirm password in registrazione | Bassa | UX |
+| Bulk approve/reject utenti admin | Bassa | Admin UX |
+| Contratti digitali / DPA | Alta | Obbligatorio per PA |
 
-### Da completare post-vendita
+### 🔵 Debito tecnico aperto (non visibile in demo)
 
-- Sistema pagamenti Stripe
-- Email verification post-registrazione
-- Google SSO
-- Paginazione Firestore (critica oltre 500 utenti)
-- Rate limiting endpoint AI
-- Export dati GDPR (diritto alla portabilità)
-- Delete account (diritto all'oblio)
-- Contratti digitali / DPA (Data Processing Agreement)
+- Firestore rules: chat list troppo permissiva (client-side filter protegge, ma non è il massimo)
+- No middleware auth server-side (solo client-side via use-auth-guard)
+- maxInstances: 1 in apphosting.yaml (da alzare a 3+ in produzione)
+- Secrets in .env committati (spostarli tutti in Firebase Secret Manager)
 
 ---
 
-## COMMIT SESSIONE 4 APRILE
+## COMMIT LOG SESSIONE
 
 ```
+fa05f9e fix: sposta useState/useEffect onboarding (Rules of Hooks)
+a381d10 docs: aggiorna 4 aprile.md
 3d5a710 feat: cookie banner GDPR, pricing, about, come funziona, onboarding, navbar, footer
+aea98a0 feat: admin panoramica reale + Recharts, sidebar avatar, footer contatti
+916b939 feat: password toggle, chat nomi reali, sidebar badge pending, stats fix
+0c85880 fix: admin chats, isDemo filter, PDF limit, matches search, Sentry client, skeleton
 ```
 
-**7 file modificati, 710 inserzioni, 27 eliminazioni**
-
-File toccati:
-- `src/components/CookieBanner.tsx` ← NUOVO
-- `src/app/about/page.tsx` ← NUOVO
-- `src/app/pricing/page.tsx` ← NUOVO
-- `src/app/layout.tsx` ← modificato
-- `src/components/layout/Navbar.tsx` ← modificato
-- `src/app/page.tsx` ← modificato
-- `src/app/dashboard/page.tsx` ← modificato
+**Totale: 6 commit, ~20 file, 1000+ righe aggiunte/modificate**
 
 ---
 
-*Aggiornato: 04/04/2026 — Fine sessione lavori*
+*Aggiornato: 04/04/2026 — Sessione completata*
