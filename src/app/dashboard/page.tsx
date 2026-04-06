@@ -55,6 +55,23 @@ export default function DashboardOverview() {
     .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
     .slice(0, 3);
 
+  // Welcome card — hooks PRIMA di qualsiasi return condizionale (Rules of Hooks)
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    if (userProfile?.status === "Approved") {
+      const dismissed = localStorage.getItem("onboarding_dismissed");
+      if (dismissed !== "true") {
+        setShowWelcome(true);
+      }
+    }
+  }, [userProfile]);
+
+  function handleDismissWelcome() {
+    localStorage.setItem("onboarding_dismissed", "true");
+    setShowWelcome(false);
+  }
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen bg-slate-50">
@@ -75,22 +92,6 @@ export default function DashboardOverview() {
         </main>
       </div>
     );
-  }
-
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  useEffect(() => {
-    if (userProfile?.status === "Approved") {
-      const dismissed = localStorage.getItem("onboarding_dismissed");
-      if (dismissed !== "true") {
-        setShowWelcome(true);
-      }
-    }
-  }, [userProfile]);
-
-  function handleDismissWelcome() {
-    localStorage.setItem("onboarding_dismissed", "true");
-    setShowWelcome(false);
   }
 
   return (
