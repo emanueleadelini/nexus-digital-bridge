@@ -13,10 +13,11 @@ import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
+import { setSessionCookie } from "@/lib/session-cookie";
 
 // Rimuove caratteri HTML pericolosi per prevenire XSS
 const sanitize = (str: string) => str.replace(/[<>"'`]/g, '').trim();
@@ -25,6 +26,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState<string>("company");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [companyName, setCompanyName] = useState("");
@@ -86,6 +88,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      toast({ variant: "destructive", title: "Password diverse", description: "I due campi password non coincidono." });
+      return;
+    }
+
     if (selectedSectors.length === 0) {
       toast({ variant: "destructive", title: "Settori mancanti", description: "Seleziona almeno un settore." });
       return;
@@ -130,8 +137,21 @@ export default function RegisterPage() {
       notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(() => {});
       sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(() => {});
 
-      toast({ title: "Registrazione avvenuta", description: "Account in fase di verifica." });
-      router.push("/dashboard");
+      // Email di verifica (non bloccante: l'accesso resta legato all'approvazione admin).
+      try {
+        await sendEmailVerification(user);
+      } catch {
+        // Se l'invio fallisce, la registrazione resta valida.
+      }
+
+      try {
+        setSessionCookie(await user.getIdToken());
+      } catch {
+        // Senza cookie ci pensa useAuthGuard dopo il redirect.
+      }
+
+      toast({ title: "Registrazione avvenuta", description: "Controlla la tua email per verificarla. Account in fase di verifica." });
+      router.push("/pending-approval");
     } catch (error: unknown) {
       const firebaseError = error as { message?: string; code?: string };
       let message = firebaseError.message || "Errore durante la registrazione.";
@@ -209,6 +229,15 @@ export default function RegisterPage() {
                       <Label htmlFor="password">Password <span className="text-slate-400 font-normal">(min. 8 caratteri)</span></Label>
                       <div className="relative">
                         <Input id="password" type={showPassword ? "text" : "password"} required minLength={8} maxLength={128} className="rounded-xl pr-12" value={password} onChange={(e) => setPassword(e.target.value)} />
+                        <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" tabIndex={-1}>
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword">Conferma Password</Label>
+                      <div className="relative">
+                        <Input id="confirmPassword" type={showPassword ? "text" : "password"} required minLength={8} maxLength={128} className="rounded-xl pr-12" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                         <button type="button" onClick={() => setShowPassword(p => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors" tabIndex={-1}>
                           {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>

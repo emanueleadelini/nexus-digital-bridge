@@ -21,13 +21,14 @@ import { FileText, Plus, Search, User, X, Loader2, Trash2, Sparkles, Upload } fr
 import { useState, useRef } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebase";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { parseStudentCV } from "@/ai/flows/parse-cv-flow";
 
 export default function StudentsPage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user } = useAuthGuard("Institute");
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -84,7 +85,9 @@ export default function StudentsPage() {
         const base64 = reader.result as string;
         try {
           setParsingStatus("Gemini sta analizzando il CV Europass...");
-          const result = await parseStudentCV({ pdfDataUri: base64 });
+          if (!user) throw new Error("Sessione scaduta. Accedi di nuovo.");
+          const idToken = await user.getIdToken();
+          const result = await parseStudentCV({ pdfDataUri: base64, idToken });
           
           setParsingStatus("Estrazione competenze completata!");
           setNewStudent({

@@ -10,9 +10,21 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { INDUSTRY_SECTORS } from '@/lib/constants';
+import { checkRateLimit } from '@/lib/rate-limit';
+import { requireInstituteCaller } from '@/lib/server-auth';
+
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const PDF_DATA_URI_PREFIX = 'data:application/pdf;base64,';
+// Quota anti-abuso: 10 analisi IA all'ora per utente.
+const CV_RATE_LIMIT = { limit: 10, windowMs: 60 * 60 * 1000 };
 
 const ParseCVInputSchema = z.object({
   pdfDataUri: z.string().describe("Il file PDF del CV codificato in Base64 (data URI)."),
+});
+
+// Input della Server Action: PDF + prova di sessione (verificata sul server).
+const ParseCVActionSchema = ParseCVInputSchema.extend({
+  idToken: z.string().describe("ID token Firebase del chiamante (verificato sul server)."),
 });
 
 const ParseCVOutputSchema = z.object({
@@ -22,14 +34,34 @@ const ParseCVOutputSchema = z.object({
   suggestedSectorIds: z.array(z.string()).describe("Lista di settori merceologici suggeriti basati sul contenuto del CV."),
 });
 
-export type ParseCVInput = z.infer<typeof ParseCVInputSchema>;
+export type ParseCVInput = z.infer<typeof ParseCVActionSchema>;
 export type ParseCVOutput = z.infer<typeof ParseCVOutputSchema>;
 
 /**
  * Funzione principale per l'analisi dei CV degli studenti.
+ *
+ * Protetta: verifica sessione + ruolo Institute/Admin + stato Approved,
+ * controllo dimensione PDF e rate limit PRIMA di consumare quota Gemini.
  */
 export async function parseStudentCV(input: ParseCVInput): Promise<ParseCVOutput> {
-  return parseCVFlow(input);
+  const parsed = ParseCVActionSchema.parse(input);
+  const caller = await requireInstituteCaller(parsed.idToken);
+
+  if (!parsed.pdfDataUri.startsWith(PDF_DATA_URI_PREFIX)) {
+    throw new Error('Il file deve essere un PDF (data URI non valido).');
+  }
+  const base64Body = parsed.pdfDataUri.slice(PDF_DATA_URI_PREFIX.length);
+  const approxBytes = Math.floor(base64Body.length * 3 / 4);
+  if (approxBytes > MAX_PDF_BYTES) {
+    throw new Error('Il PDF supera i 10MB. Comprimi il file e riprova.');
+  }
+
+  const quota = checkRateLimit(`parse-cv:${caller.uid}`, CV_RATE_LIMIT);
+  if (!quota.allowed) {
+    throw new Error('Quota analisi IA esaurita. Riprova tra un ora.');
+  }
+
+  return parseCVFlow({ pdfDataUri: parsed.pdfDataUri });
 }
 
 const parseCVFlow = ai.defineFlow(

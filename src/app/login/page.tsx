@@ -15,6 +15,7 @@ import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { setSessionCookie } from "@/lib/session-cookie";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -45,7 +46,19 @@ export default function LoginPage() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
-      if (userData?.role === "Admin") {
+      // Salva la sessione per il middleware (redirect veloci).
+      try {
+        setSessionCookie(await user.getIdToken());
+      } catch {
+        // Il login resta valido anche senza cookie: ci pensa useAuthGuard.
+      }
+
+      // Instrada per stato: mai in dashboard chi non e approvato.
+      if (userData?.status === "Pending") {
+        router.push("/pending-approval");
+      } else if (userData?.status === "Rejected") {
+        router.push("/rejected");
+      } else if (userData?.role === "Admin") {
         router.push("/admin");
       } else {
         router.push("/dashboard");

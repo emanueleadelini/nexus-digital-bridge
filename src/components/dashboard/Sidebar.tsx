@@ -26,6 +26,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, useUser, useDoc, useMemoFirebase, useCollection } from "@/firebase";
 import { doc, collection, query, where } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import { clearSessionCookie } from "@/lib/session-cookie";
 
 const commonLinks = [
   { name: "Panoramica", href: "/dashboard", icon: LayoutDashboard },
@@ -99,6 +100,7 @@ export function DashboardSidebar() {
   const handleLogout = async () => {
     if (!auth) return;
     await signOut(auth);
+    clearSessionCookie();
     toast({
       title: "Sessione terminata",
       description: "Hai effettuato il logout correttamente. A presto!",

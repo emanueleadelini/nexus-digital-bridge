@@ -37,11 +37,12 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { collection, query, addDoc } from "firebase/firestore";
 
 export default function SearchInstitutesPage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user } = useAuthGuard("Company");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [selectedInstitute, setSelectedInstitute] = useState<any | null>(null);

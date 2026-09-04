@@ -20,6 +20,7 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -27,7 +28,7 @@ import type { ChatMessage, UserRole } from "@/types";
 
 function ChatContent() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user } = useAuthGuard();
   const { toast } = useToast();
   const searchParams = useSearchParams();
 

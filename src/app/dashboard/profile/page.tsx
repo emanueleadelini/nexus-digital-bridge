@@ -13,11 +13,12 @@ import { X, Briefcase, Building2, MapPin, Globe, Loader2, Check } from "lucide-r
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from "@/firebase";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { doc, collection, updateDoc } from "firebase/firestore";
 
 export default function ProfilePage() {
   const db = useFirestore();
-  const { user } = useUser();
+  const { user } = useAuthGuard();
   const { toast } = useToast();
 
   const userRef = useMemoFirebase(() => {

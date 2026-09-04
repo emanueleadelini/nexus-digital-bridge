@@ -3,6 +3,12 @@ import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  experimental: {
+    serverActions: {
+      // Il parsing CV invia PDF fino a 10MB come data URI (base64 +33%).
+      bodySizeLimit: '15mb',
+    },
+  },
   images: {
     remotePatterns: [
       {
