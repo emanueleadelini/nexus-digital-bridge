@@ -52,9 +52,9 @@ export default function StudentsPage() {
   const { data: students, isLoading } = useCollection(studentsRef);
   const { data: availableSectors } = useCollection(sectorsRef);
 
-  const filteredStudents = students?.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.class.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStudents = students?.filter(s =>
+    (s.name ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.class ?? "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddSector = (sector: string) => {

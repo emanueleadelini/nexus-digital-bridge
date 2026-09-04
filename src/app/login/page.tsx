@@ -8,26 +8,46 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { sendEmailVerification, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { setSessionCookie } from "@/lib/session-cookie";
+import { setSessionCookie, clearSessionCookie } from "@/lib/session-cookie";
 
-export default function LoginPage() {
+/** Destinazioni interne consentite per il parametro ?redirect= (anti open-redirect). */
+function safeRedirectTarget(raw: string | null): string | null {
+  if (!raw) return null;
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null;
+  if (raw.startsWith('/login') || raw.startsWith('/register')) return null;
+  return raw;
+}
+
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const auth = useAuth();
   const db = useFirestore();
+
+  const handleResendVerification = async () => {
+    if (!auth?.currentUser) return;
+    try {
+      await sendEmailVerification(auth.currentUser);
+      toast({ title: "Email inviata", description: "Controlla la tua casella e poi accedi di nuovo." });
+    } catch {
+      toast({ variant: "destructive", title: "Invio fallito", description: "Riprova tra qualche minuto." });
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +55,7 @@ export default function LoginPage() {
 
     setIsLoading(true);
     setAuthError(null);
+    setNeedsVerification(false);
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanPassword = password;
@@ -46,22 +67,45 @@ export default function LoginPage() {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
 
-      // Salva la sessione per il middleware (redirect veloci).
-      try {
-        setSessionCookie(await user.getIdToken());
-      } catch {
-        // Il login resta valido anche senza cookie: ci pensa useAuthGuard.
+      // Fail-closed: senza profilo o senza approvazione non si entra da nessuna parte.
+      if (!userDoc.exists() || !userData) {
+        await signOut(auth);
+        clearSessionCookie();
+        setAuthError("Profilo non trovato. Completa la registrazione o contatta il supporto.");
+        return;
       }
 
-      // Instrada per stato: mai in dashboard chi non e approvato.
-      if (userData?.status === "Pending") {
+      if (!user.emailVerified) {
+        // Resta fermo al login (niente cookie, niente redirect): solo verifica.
+        setAuthError("Devi verificare la tua email prima di accedere. Controlla la casella (anche lo spam).");
+        setNeedsVerification(true);
+        return;
+      }
+
+      if (userData.status === "Pending") {
         router.push("/pending-approval");
-      } else if (userData?.status === "Rejected") {
+      } else if (userData.status === "Rejected") {
         router.push("/rejected");
-      } else if (userData?.role === "Admin") {
-        router.push("/admin");
+      } else if (userData.status !== "Approved") {
+        await signOut(auth);
+        clearSessionCookie();
+        setAuthError("Account non attivo. Contatta il supporto.");
+        return;
       } else {
-        router.push("/dashboard");
+        // Solo gli approvati ricevono il cookie di sessione.
+        try {
+          setSessionCookie(await user.getIdToken());
+        } catch {
+          // Senza cookie ci pensano middleware + useAuthGuard al primo accesso.
+        }
+        const redirect = safeRedirectTarget(searchParams.get("redirect"));
+        if (userData.role === "Admin") {
+          router.push(redirect && redirect.startsWith("/admin") ? redirect : "/admin");
+        } else if (redirect && redirect.startsWith("/dashboard")) {
+          router.push(redirect);
+        } else {
+          router.push("/dashboard");
+        }
       }
       toast({ title: "Accesso effettuato", description: "Benvenuto su Nexus Digital Bridge." });
 
@@ -111,6 +155,17 @@ export default function LoginPage() {
                 <AlertDescription className="text-xs">
                   {authError}
                 </AlertDescription>
+                {needsVerification && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={handleResendVerification}
+                  >
+                    Reinvia email di verifica
+                  </Button>
+                )}
               </Alert>
             )}
 
@@ -171,5 +226,13 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }

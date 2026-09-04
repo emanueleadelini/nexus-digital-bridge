@@ -77,7 +77,8 @@ function ChatContent() {
 
   const { data: myChats, isLoading } = useCollection(chatsRef);
 
-  // Real-time listener sui messaggi della chat attiva (subcollection)
+  // Real-time listener sui messaggi della chat attiva (subcollection).
+  // Solo chat di cui sono parte: in caso di errore permessi, avvisa e resetta.
   useEffect(() => {
     if (!db || !activeChatId) {
       setMessages([]);
@@ -85,9 +86,17 @@ function ChatContent() {
     }
     const messagesRef = collection(db, "chats", activeChatId, "messages");
     const q = query(messagesRef, orderBy("createdAt", "asc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage)));
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        setMessages(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage)));
+      },
+      () => {
+        setMessages([]);
+        setActiveChatId(null);
+        toast({ variant: "destructive", title: "Accesso negato", description: "Non puoi leggere questa conversazione." });
+      }
+    );
     return () => unsubscribe();
   }, [db, activeChatId]);
 
@@ -96,12 +105,20 @@ function ChatContent() {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Selezione automatica / creazione chat da URL params
+  // Selezione automatica / creazione chat da URL params.
+  // Il chatId da URL vale solo se e tra le mie chat (anti IDOR).
+  const creatingRef = useRef(false);
   useEffect(() => {
     if (isLoading || !myChats) return;
 
     if (chatIdFromUrl) {
-      setActiveChatId(chatIdFromUrl);
+      const mine = myChats.find((c) => c.id === chatIdFromUrl);
+      if (mine) {
+        setActiveChatId(chatIdFromUrl);
+      } else {
+        setActiveChatId(null);
+        setMessages([]);
+      }
       return;
     }
 
@@ -109,8 +126,11 @@ function ChatContent() {
       const existing = myChats.find((c) => c.instituteId === targetInstituteId);
       if (existing) {
         setActiveChatId(existing.id);
-      } else if (!isCreatingChat) {
-        handleCreateNewChat(targetInstituteId, targetStudentId);
+      } else if (!creatingRef.current) {
+        creatingRef.current = true;
+        handleCreateNewChat(targetInstituteId, targetStudentId).finally(() => {
+          creatingRef.current = false;
+        });
       }
     } else if (myChats.length > 0 && !activeChatId && !targetInstituteId) {
       setActiveChatId(myChats[0].id);

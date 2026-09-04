@@ -34,22 +34,31 @@ service cloud.firestore {
     match /users/{userId} {
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      // Creazione vincolata: ruolo e stato NON sono a scelta del client.
+      // Solo Pending + Company/Institute; Admin e Approved solo via backend/admin.
+      allow create: if isOwner(userId)
+        && request.resource.data.role in ['Company', 'Institute']
+        && request.resource.data.status == 'Pending';
+      allow update: if isAdmin()
+        || (isOwner(userId)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status);
       allow delete: if isAdmin();
     }
 
     match /companies/{companyId} {
       allow get, list: if isApproved() || isAdmin();
-      allow create: if isOwner(companyId) || isAdmin();
-      allow update: if (isOwner(companyId) && isApproved()) || isAdmin();
+      allow create: if (isOwner(companyId) && request.resource.data.status == 'Pending') || isAdmin();
+      allow update: if (isOwner(companyId) && isApproved()
+          && request.resource.data.status == resource.data.status) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /institutes/{instituteId} {
       allow get, list: if isApproved() || isAdmin();
-      allow create: if isOwner(instituteId) || isAdmin();
-      allow update: if (isOwner(instituteId) && isApproved()) || isAdmin();
+      allow create: if (isOwner(instituteId) && request.resource.data.status == 'Pending') || isAdmin();
+      allow update: if (isOwner(instituteId) && isApproved()
+          && request.resource.data.status == resource.data.status) || isAdmin();
       allow delete: if isAdmin();
 
       match /studentCVs/{studentCVId} {

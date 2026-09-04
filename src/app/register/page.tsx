@@ -14,10 +14,9 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
+import { doc, collection, serverTimestamp, writeBatch } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
-import { setSessionCookie } from "@/lib/session-cookie";
 
 // Rimuove caratteri HTML pericolosi per prevenire XSS
 const sanitize = (str: string) => str.replace(/[<>"'`]/g, '').trim();
@@ -121,18 +120,19 @@ export default function RegisterPage() {
         profileData.types = selectedTypes;
       }
 
-      await Promise.all([
-        setDoc(doc(db, "users", user.uid), {
-          id: user.uid,
-          email: email.trim().toLowerCase(),
-          role: userRole,
-          status: "Pending",
-          firstName: sanitize(firstName),
-          lastName: sanitize(lastName),
-          createdAt: serverTimestamp(),
-        }),
-        setDoc(doc(db, profilePath, user.uid), profileData),
-      ]);
+      // Scrittura atomica (batch): profilo utente + dati ruolo, o niente.
+      const batch = writeBatch(db);
+      batch.set(doc(db, "users", user.uid), {
+        id: user.uid,
+        email: email.trim().toLowerCase(),
+        role: userRole,
+        status: "Pending",
+        firstName: sanitize(firstName),
+        lastName: sanitize(lastName),
+        createdAt: serverTimestamp(),
+      });
+      batch.set(doc(db, profilePath, user.uid), profileData);
+      await batch.commit();
 
       notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(() => {});
       sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(() => {});
@@ -144,13 +144,9 @@ export default function RegisterPage() {
         // Se l'invio fallisce, la registrazione resta valida.
       }
 
-      try {
-        setSessionCookie(await user.getIdToken());
-      } catch {
-        // Senza cookie ci pensa useAuthGuard dopo il redirect.
-      }
-
-      toast({ title: "Registrazione avvenuta", description: "Controlla la tua email per verificarla. Account in fase di verifica." });
+      // Niente cookie di sessione: i Pending non passano il middleware.
+      // Dopo l'approvazione, il primo login rilascia il cookie.
+      toast({ title: "Registrazione avvenuta", description: "Verifica la tua email, poi attendi l'approvazione." });
       router.push("/pending-approval");
     } catch (error: unknown) {
       const firebaseError = error as { message?: string; code?: string };

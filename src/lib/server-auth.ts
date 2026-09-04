@@ -16,13 +16,19 @@
 export interface CallerProfile {
   uid: string;
   email?: string;
+  emailVerified: boolean;
   role: string;
   status: string;
 }
 
 const MAX_TOKEN_LENGTH = 8192;
+const GOOGLE_TIMEOUT_MS = 10_000;
 
-async function lookupUid(idToken: string): Promise<{ uid: string; email?: string }> {
+function googleFetch(input: string, init: RequestInit): Promise<Response> {
+  return fetch(input, { ...init, cache: 'no-store', signal: AbortSignal.timeout(GOOGLE_TIMEOUT_MS) });
+}
+
+async function lookupUid(idToken: string): Promise<{ uid: string; email?: string; emailVerified: boolean }> {
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!apiKey) {
     throw new Error('Configurazione Firebase mancante sul server.');
@@ -31,23 +37,29 @@ async function lookupUid(idToken: string): Promise<{ uid: string; email?: string
   const endpoint = new URL('https://identitytoolkit.googleapis.com/v1/accounts:lookup');
   endpoint.searchParams.set('key', apiKey);
 
-  const res = await fetch(endpoint.toString(), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken }),
-    cache: 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await googleFetch(endpoint.toString(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+  } catch {
+    throw new Error('Verifica sessione non riuscita. Riprova.');
+  }
 
   if (!res.ok) {
     throw new Error('Sessione non valida. Accedi di nuovo.');
   }
 
-  const data = (await res.json()) as { users?: Array<{ localId?: string; email?: string }> };
+  const data = (await res.json()) as {
+    users?: Array<{ localId?: string; email?: string; emailVerified?: boolean }>;
+  };
   const uid = data.users?.[0]?.localId;
   if (!uid) {
     throw new Error('Sessione non valida. Accedi di nuovo.');
   }
-  return { uid, email: data.users?.[0]?.email };
+  return { uid, email: data.users?.[0]?.email, emailVerified: data.users?.[0]?.emailVerified === true };
 }
 
 async function readUserProfile(uid: string, idToken: string): Promise<{ role: string; status: string }> {
@@ -60,10 +72,14 @@ async function readUserProfile(uid: string, idToken: string): Promise<{ role: st
     `https://firestore.googleapis.com/v1/projects/${projectId}` +
     `/databases/(default)/documents/users/${encodeURIComponent(uid)}`;
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${idToken}` },
-    cache: 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await googleFetch(url, {
+      headers: { Authorization: `Bearer ${idToken}` },
+    });
+  } catch {
+    throw new Error('Verifica profilo non riuscita. Riprova.');
+  }
 
   if (!res.ok) {
     throw new Error('Profilo utente non leggibile. Accedi di nuovo.');
@@ -84,9 +100,9 @@ export async function getCallerProfile(idToken: string): Promise<CallerProfile> 
     throw new Error('Sessione non valida. Accedi di nuovo.');
   }
 
-  const { uid, email } = await lookupUid(idToken);
+  const { uid, email, emailVerified } = await lookupUid(idToken);
   const { role, status } = await readUserProfile(uid, idToken);
-  return { uid, email, role, status };
+  return { uid, email, emailVerified, role, status };
 }
 
 /**
@@ -96,6 +112,9 @@ export async function getCallerProfile(idToken: string): Promise<CallerProfile> 
 export async function requireInstituteCaller(idToken: string): Promise<CallerProfile> {
   const caller = await getCallerProfile(idToken);
 
+  if (!caller.emailVerified) {
+    throw new Error("Verifica la tua email prima di usare l'analisi IA.");
+  }
   if (caller.status !== 'Approved') {
     throw new Error('Account non ancora approvato.');
   }
