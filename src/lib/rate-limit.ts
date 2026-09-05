@@ -20,10 +20,16 @@ const buckets = new Map<string, number[]>();
 const MAX_TRACKED_KEYS = 5000;
 
 function pruneExpiredKeys(nowMs: number, windowMs: number): void {
-  if (buckets.size <= MAX_TRACKED_KEYS) return;
+  // Spazza sempre le chiavi scadute; oltre il tetto, butta anche le piu vecchie.
   for (const key of Array.from(buckets.keys())) {
     const hits = buckets.get(key) ?? [];
     if (hits.every((hit) => nowMs - hit >= windowMs)) {
+      buckets.delete(key);
+    }
+  }
+  if (buckets.size > MAX_TRACKED_KEYS) {
+    const overflow = buckets.size - MAX_TRACKED_KEYS;
+    for (const key of Array.from(buckets.keys()).slice(0, overflow)) {
       buckets.delete(key);
     }
   }

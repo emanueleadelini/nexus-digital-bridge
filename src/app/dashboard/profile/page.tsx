@@ -27,7 +27,9 @@ export default function ProfilePage() {
   }, [db, user]);
 
   const { data: userProfile, isLoading: isUserLoading } = useDoc(userRef);
-  const role = (userProfile?.role?.toLowerCase() as "company" | "institute") || "company";
+  // Fail-closed: senza ruolo noto non si legge ne si scrive nessun profilo.
+  const rawRole = userProfile?.role?.toLowerCase();
+  const role = rawRole === "company" || rawRole === "institute" ? rawRole : null;
 
   const profileDetailsRef = useMemoFirebase(() => {
     if (!db || !user || !role) return null;
@@ -101,6 +103,17 @@ export default function ProfilePage() {
         <DashboardSidebar />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </main>
+      </div>
+    );
+  }
+
+  if (!role) {
+    return (
+      <div className="flex min-h-screen bg-slate-50">
+        <DashboardSidebar />
+        <main className="flex-1 flex items-center justify-center p-8">
+          <p className="text-slate-500">Profilo non disponibile per il tuo ruolo. Contatta il supporto.</p>
         </main>
       </div>
     );

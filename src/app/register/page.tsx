@@ -13,7 +13,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, deleteUser } from "firebase/auth";
 import { doc, collection, serverTimestamp, writeBatch } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
@@ -132,10 +132,25 @@ export default function RegisterPage() {
         createdAt: serverTimestamp(),
       });
       batch.set(doc(db, profilePath, user.uid), profileData);
-      await batch.commit();
+      try {
+        await batch.commit();
+      } catch (batchError) {
+        // Compensazione: senza profilo, l'account Auth resterebbe orfano.
+        console.error("Registrazione: batch Firestore fallito, rimuovo l'account Auth.", batchError);
+        try {
+          await deleteUser(user);
+        } catch {
+          console.error("Registrazione: impossibile rimuovere l'account orfano, serve pulizia admin.");
+        }
+        throw batchError;
+      }
 
-      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(() => {});
-      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(() => {});
+      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch((err) => {
+        console.error("Registrazione: notifica admin fallita.", err);
+      });
+      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch((err) => {
+        console.error("Registrazione: email di benvenuto fallita.", err);
+      });
 
       // Email di verifica (non bloccante: l'accesso resta legato all'approvazione admin).
       try {

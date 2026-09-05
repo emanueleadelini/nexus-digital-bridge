@@ -11,13 +11,13 @@ import { useFirestore, useUser, useCollection, useMemoFirebase, useDoc } from "@
 import {
   collection,
   doc,
-  updateDoc,
   addDoc,
   query,
   where,
   orderBy,
   onSnapshot,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
@@ -168,19 +168,21 @@ function ChatContent() {
     setNewMessage("");
 
     try {
-      await addDoc(collection(db, "chats", activeChatId, "messages"), {
+      // Batch atomico: messaggio + metadati chat, o niente (niente duplicati al retry).
+      const batch = writeBatch(db);
+      batch.set(doc(collection(db, "chats", activeChatId, "messages")), {
         senderId: user.uid,
         senderEmail: user.email ?? "",
         senderRole: role,
         text,
         createdAt: serverTimestamp(),
       });
-
-      await updateDoc(doc(db, "chats", activeChatId), {
+      batch.update(doc(db, "chats", activeChatId), {
         lastMessage: text,
         lastMessageTime: serverTimestamp(),
         lastSenderId: user.uid,
       });
+      await batch.commit();
     } catch {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile inviare il messaggio." });
       setNewMessage(text);

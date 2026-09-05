@@ -80,6 +80,13 @@ export default function StudentsPage() {
     
     try {
       const reader = new FileReader();
+      const resetParsing = (message: string) => {
+        toast({ variant: "destructive", title: "Errore Lettura", description: message });
+        setIsParsing(false);
+        setParsingStatus("");
+      };
+      reader.onerror = () => resetParsing("Impossibile leggere il file selezionato.");
+      reader.onabort = () => resetParsing("Lettura del file interrotta.");
       reader.readAsDataURL(file);
       reader.onload = async () => {
         const base64 = reader.result as string;

@@ -46,6 +46,11 @@ function LoginForm() {
       toast({ title: "Email inviata", description: "Controlla la tua casella e poi accedi di nuovo." });
     } catch {
       toast({ variant: "destructive", title: "Invio fallito", description: "Riprova tra qualche minuto." });
+    } finally {
+      // Chiudi comunque la sessione non verificata.
+      await signOut(auth).catch(() => {});
+      clearSessionCookie();
+      setNeedsVerification(false);
     }
   };
 
@@ -83,9 +88,13 @@ function LoginForm() {
       }
 
       if (userData.status === "Pending") {
+        toast({ title: "Account in verifica", description: "Ti avviseremo via email all'approvazione." });
         router.push("/pending-approval");
       } else if (userData.status === "Rejected") {
-        router.push("/rejected");
+        await signOut(auth);
+        clearSessionCookie();
+        setAuthError("Account non approvato. Contatta il supporto per i dettagli.");
+        return;
       } else if (userData.status !== "Approved") {
         await signOut(auth);
         clearSessionCookie();
@@ -96,7 +105,8 @@ function LoginForm() {
         try {
           setSessionCookie(await user.getIdToken());
         } catch {
-          // Senza cookie ci pensano middleware + useAuthGuard al primo accesso.
+          setAuthError("Sessione non avviata. Riprova il login.");
+          return;
         }
         const redirect = safeRedirectTarget(searchParams.get("redirect"));
         if (userData.role === "Admin") {
@@ -106,8 +116,8 @@ function LoginForm() {
         } else {
           router.push("/dashboard");
         }
+        toast({ title: "Accesso effettuato", description: "Benvenuto su Nexus Digital Bridge." });
       }
-      toast({ title: "Accesso effettuato", description: "Benvenuto su Nexus Digital Bridge." });
 
     } catch (error: unknown) {
 

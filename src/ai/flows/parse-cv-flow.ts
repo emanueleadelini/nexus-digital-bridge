@@ -45,7 +45,14 @@ export type ParseCVOutput = z.infer<typeof ParseCVOutputSchema>;
  */
 export async function parseStudentCV(input: ParseCVInput): Promise<ParseCVOutput> {
   const parsed = ParseCVActionSchema.parse(input);
+
+  // Ordine: prima chi sei (a pagamento solo dopo), poi la quota, poi il corpo.
   const caller = await requireInstituteCaller(parsed.idToken);
+
+  const quota = checkRateLimit(`parse-cv:${caller.uid}`, CV_RATE_LIMIT);
+  if (!quota.allowed) {
+    throw new Error('Quota analisi IA esaurita. Riprova tra un ora.');
+  }
 
   if (!parsed.pdfDataUri.startsWith(PDF_DATA_URI_PREFIX)) {
     throw new Error('Il file deve essere un PDF (data URI non valido).');
@@ -54,11 +61,6 @@ export async function parseStudentCV(input: ParseCVInput): Promise<ParseCVOutput
   const approxBytes = Math.floor(base64Body.length * 3 / 4);
   if (approxBytes > MAX_PDF_BYTES) {
     throw new Error('Il PDF supera i 10MB. Comprimi il file e riprova.');
-  }
-
-  const quota = checkRateLimit(`parse-cv:${caller.uid}`, CV_RATE_LIMIT);
-  if (!quota.allowed) {
-    throw new Error('Quota analisi IA esaurita. Riprova tra un ora.');
   }
 
   return parseCVFlow({ pdfDataUri: parsed.pdfDataUri });
