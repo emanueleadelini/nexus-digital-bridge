@@ -31,7 +31,6 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [needsVerification, setNeedsVerification] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -39,28 +38,12 @@ function LoginForm() {
   const auth = useAuth();
   const db = useFirestore();
 
-  const handleResendVerification = async () => {
-    if (!auth?.currentUser) return;
-    try {
-      await sendEmailVerification(auth.currentUser);
-      toast({ title: "Email inviata", description: "Controlla la tua casella e poi accedi di nuovo." });
-    } catch {
-      toast({ variant: "destructive", title: "Invio fallito", description: "Riprova tra qualche minuto." });
-    } finally {
-      // Chiudi comunque la sessione non verificata.
-      await signOut(auth).catch(() => {});
-      clearSessionCookie();
-      setNeedsVerification(false);
-    }
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !db) return;
 
     setIsLoading(true);
     setAuthError(null);
-    setNeedsVerification(false);
 
     const cleanEmail = email.toLowerCase().trim();
     const cleanPassword = password;
@@ -81,9 +64,15 @@ function LoginForm() {
       }
 
       if (!user.emailVerified) {
-        // Resta fermo al login (niente cookie, niente redirect): solo verifica.
-        setAuthError("Devi verificare la tua email prima di accedere. Controlla la casella (anche lo spam).");
-        setNeedsVerification(true);
+        // Niente sessioni non verificate in giro: email subito e uscita.
+        try {
+          await sendEmailVerification(user);
+        } catch {
+          // Se l'invio fallisce, l'utente riprova il login per riceverla.
+        }
+        await signOut(auth);
+        clearSessionCookie();
+        setAuthError("Devi verificare la tua email prima di accedere. Te l'abbiamo appena rimandata: controlla la casella (anche lo spam).");
         return;
       }
 
@@ -165,17 +154,6 @@ function LoginForm() {
                 <AlertDescription className="text-xs">
                   {authError}
                 </AlertDescription>
-                {needsVerification && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={handleResendVerification}
-                  >
-                    Reinvia email di verifica
-                  </Button>
-                )}
               </Alert>
             )}
 

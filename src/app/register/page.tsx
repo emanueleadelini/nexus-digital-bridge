@@ -150,6 +150,8 @@ export default function RegisterPage() {
         role: userRole,
         name: displayName,
         idToken: await user.getIdToken(),
+      }).then((res) => {
+        if (!res.success) console.error("Registrazione: notifica admin non inviata.", res.error);
       }).catch((err) => {
         console.error("Registrazione: notifica admin fallita.", err);
       });
@@ -157,7 +159,12 @@ export default function RegisterPage() {
         email.trim().toLowerCase(),
         sanitize(firstName),
         await user.getIdToken()
-      ).catch((err) => {
+      ).then((res) => {
+        if (res && !res.success) {
+          console.error("Registrazione: email di benvenuto non inviata.", res.error);
+          toast({ title: "Attenzione", description: "Registrazione ok, ma l'email di conferma potrebbe non essere arrivata." });
+        }
+      }).catch((err) => {
         console.error("Registrazione: email di benvenuto fallita.", err);
       });
 

@@ -62,14 +62,14 @@ export default function AdminUsersPage() {
       const userDoc = await getDoc(doc(db, "users", userId));
       const userData = userDoc.data();
 
-      // Invia email di notifica appropriata (solo admin autenticato)
+      // Invia email di notifica appropriata (solo admin autenticato;
+      // destinatario letto dal server, mai dal client)
       if (userData?.email && user) {
-        const userName = userData.firstName || 'Utente';
         const idToken = await user.getIdToken();
         if (status === 'Approved') {
-          sendApprovalEmail(userData.email, userName, idToken).catch(() => {});
+          sendApprovalEmail(userId, idToken).catch(() => {});
         } else if (status === 'Rejected') {
-          sendRejectionEmail(userData.email, userName, idToken).catch(() => {});
+          sendRejectionEmail(userId, idToken).catch(() => {});
         }
       }
 

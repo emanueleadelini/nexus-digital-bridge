@@ -120,23 +120,70 @@ export async function sendWelcomePendingEmail(userEmail: string, userName: strin
   }
 }
 
-/**
- * Email di approvazione. Solo admin verificato e approvato.
- */
-export async function sendApprovalEmail(userEmail: string, userName: string, idToken: string) {
+/** Legge un profilo utente via REST con token admin (le rules lo permettono). */
+async function readAnyUserProfile(
+  targetUserId: string,
+  adminToken: string
+): Promise<{ email: string; firstName: string; status: string } | null> {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  if (!projectId) return null;
   try {
-    await requireAdminCaller(idToken);
+    const url =
+      `https://firestore.googleapis.com/v1/projects/${projectId}` +
+      `/databases/(default)/documents/users/${encodeURIComponent(targetUserId)}`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+      cache: 'no-store',
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return null;
+    const doc = (await res.json()) as {
+      fields?: {
+        email?: { stringValue?: string };
+        firstName?: { stringValue?: string };
+        status?: { stringValue?: string };
+      };
+    };
+    const email = doc.fields?.email?.stringValue;
+    if (!email) return null;
+    return {
+      email,
+      firstName: doc.fields?.firstName?.stringValue ?? 'Utente',
+      status: doc.fields?.status?.stringValue ?? '',
+    };
+  } catch (err) {
+    console.error('Lettura profilo destinatario fallita:', err);
+    return null;
+  }
+}
+
+/**
+ * Email di approvazione. Solo admin: destinatario letto dal server,
+ * deve essere in attesa; rate limit per admin.
+ */
+export async function sendApprovalEmail(targetUserId: string, idToken: string) {
+  try {
+    const admin = await requireAdminCaller(idToken);
+    const quota = checkRateLimit(`admin-mail:${admin.uid}`, { limit: 30, windowMs: 60 * 60 * 1000 });
+    if (!quota.allowed) {
+      return { success: false as const, error: 'rate_limited' as const };
+    }
+
+    const target = await readAnyUserProfile(targetUserId, idToken);
+    if (!target || target.status !== 'Pending') {
+      return { success: false as const, error: 'forbidden' as const };
+    }
 
     const resend = getResend();
     if (!resend) return { success: false as const, error: 'config_missing' as const };
 
     await resend.emails.send({
       from: FROM,
-      to: [userEmail],
+      to: [target.email],
       subject: 'Account Approvato - Benvenuto su Nexus Digital Bridge',
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #1a237e;">
-          <h1 style="color: #1a237e;">Ottime notizie, ${esc(userName)}!</h1>
+          <h1 style="color: #1a237e;">Ottime notizie, ${esc(target.firstName)}!</h1>
           <p>Il tuo account su Nexus Digital Bridge è stato approvato con successo dal nostro team.</p>
           <p>Ora puoi accedere a tutte le funzionalità della piattaforma, inclusi il matching intelligente, la ricerca degli istituti e la chat diretta.</p>
           <div style="margin-top: 30px;">
@@ -157,22 +204,31 @@ export async function sendApprovalEmail(userEmail: string, userName: string, idT
 }
 
 /**
- * Email di rifiuto. Solo admin verificato e approvato.
+ * Email di rifiuto. Solo admin: destinatario letto dal server.
  */
-export async function sendRejectionEmail(userEmail: string, userName: string, idToken: string) {
+export async function sendRejectionEmail(targetUserId: string, idToken: string) {
   try {
-    await requireAdminCaller(idToken);
+    const admin = await requireAdminCaller(idToken);
+    const quota = checkRateLimit(`admin-mail:${admin.uid}`, { limit: 30, windowMs: 60 * 60 * 1000 });
+    if (!quota.allowed) {
+      return { success: false as const, error: 'rate_limited' as const };
+    }
+
+    const target = await readAnyUserProfile(targetUserId, idToken);
+    if (!target || (target.status !== 'Pending' && target.status !== 'Approved')) {
+      return { success: false as const, error: 'forbidden' as const };
+    }
 
     const resend = getResend();
     if (!resend) return { success: false as const, error: 'config_missing' as const };
 
     await resend.emails.send({
       from: FROM,
-      to: [userEmail],
+      to: [target.email],
       subject: 'Aggiornamento sulla tua registrazione - Nexus Digital Bridge',
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #1a237e;">
-          <h1 style="color: #1a237e;">Ciao ${esc(userName)},</h1>
+          <h1 style="color: #1a237e;">Ciao ${esc(target.firstName)},</h1>
           <p>Ti ringraziamo per l'interesse mostrato verso Nexus Digital Bridge.</p>
           <p>Dopo aver esaminato i dati forniti durante la registrazione, purtroppo non siamo in grado di approvare il tuo account in questo momento.</p>
           <p>Questo può accadere se i dati aziendali o dell'istituto non sono risultati verificabili o conformi alle finalità della piattaforma.</p>

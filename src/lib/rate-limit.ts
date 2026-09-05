@@ -67,3 +67,18 @@ export function checkRateLimit(key: string, options: RateLimitOptions): RateLimi
 export function resetRateLimit(key: string): void {
   buckets.delete(key);
 }
+
+/**
+ * Restituisce una tacca consumata (es. analisi fallita prima di Gemini).
+ * Rimuove l'ultimo hit registrato per la chiave.
+ */
+export function refundRateLimit(key: string): void {
+  const hits = buckets.get(key);
+  if (!hits || hits.length === 0) return;
+  hits.pop();
+  if (hits.length === 0) {
+    buckets.delete(key);
+  } else {
+    buckets.set(key, hits);
+  }
+}

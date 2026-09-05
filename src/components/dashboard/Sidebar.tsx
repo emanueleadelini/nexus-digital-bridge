@@ -118,6 +118,21 @@ export function DashboardSidebar() {
     );
   }
 
+  // Senza ruolo noto non si mostra navigazione: errore visibile, mai crash.
+  if (!role) {
+    return (
+      <div className="w-64 bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-sm text-slate-400">Profilo non disponibile. Ricarica o contatta il supporto.</p>
+        <button
+          onClick={handleLogout}
+          className="mt-4 text-sm font-bold text-secondary hover:underline"
+        >
+          Torna al login
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="w-64 bg-slate-900 text-white min-h-screen flex flex-col sticky top-0 h-screen">
       <div className="p-6">
@@ -170,7 +185,7 @@ export function DashboardSidebar() {
         <div className="mt-auto pt-4 border-t border-slate-800">
           <div className="flex items-center gap-3 px-4 py-3 text-slate-400">
             <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white uppercase shrink-0">
-              {(userProfile?.firstName?.[0] || '') + (userProfile?.lastName?.[0] || '') || role.substring(0, 2)}
+              {(userProfile?.firstName?.[0] || '') + (userProfile?.lastName?.[0] || '') || (role ?? '??').substring(0, 2)}
             </div>
             <div className="flex-1 overflow-hidden">
               <div className="text-sm font-bold text-white truncate">

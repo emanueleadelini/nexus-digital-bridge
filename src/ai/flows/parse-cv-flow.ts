@@ -10,13 +10,9 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { INDUSTRY_SECTORS } from '@/lib/constants';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, refundRateLimit } from '@/lib/rate-limit';
 import { requireInstituteCaller } from '@/lib/server-auth';
-
-const MAX_PDF_BYTES = 10 * 1024 * 1024;
-const PDF_DATA_URI_PREFIX = 'data:application/pdf;base64,';
-// Quota anti-abuso: 10 analisi IA all'ora per utente.
-const CV_RATE_LIMIT = { limit: 10, windowMs: 60 * 60 * 1000 };
+import { CV_RATE_LIMIT, MAX_PDF_BYTES, PDF_DATA_URI_PREFIX, estimateBase64Bytes, startsWithPdfMagic } from '@/lib/cv-limits';
 
 const ParseCVInputSchema = z.object({
   pdfDataUri: z.string().describe("Il file PDF del CV codificato in Base64 (data URI)."),
@@ -46,24 +42,33 @@ export type ParseCVOutput = z.infer<typeof ParseCVOutputSchema>;
 export async function parseStudentCV(input: ParseCVInput): Promise<ParseCVOutput> {
   const parsed = ParseCVActionSchema.parse(input);
 
-  // Ordine: prima chi sei (a pagamento solo dopo), poi la quota, poi il corpo.
+  // Ordine: chi sei -> corpo valido -> quota -> Gemini (la quota si brucia
+  // solo per PDF veri, e viene restituita se l'analisi fallisce).
   const caller = await requireInstituteCaller(parsed.idToken);
-
-  const quota = checkRateLimit(`parse-cv:${caller.uid}`, CV_RATE_LIMIT);
-  if (!quota.allowed) {
-    throw new Error('Quota analisi IA esaurita. Riprova tra un ora.');
-  }
 
   if (!parsed.pdfDataUri.startsWith(PDF_DATA_URI_PREFIX)) {
     throw new Error('Il file deve essere un PDF (data URI non valido).');
   }
   const base64Body = parsed.pdfDataUri.slice(PDF_DATA_URI_PREFIX.length);
-  const approxBytes = Math.floor(base64Body.length * 3 / 4);
-  if (approxBytes > MAX_PDF_BYTES) {
+  if (estimateBase64Bytes(base64Body) > MAX_PDF_BYTES) {
     throw new Error('Il PDF supera i 10MB. Comprimi il file e riprova.');
   }
+  if (!startsWithPdfMagic(base64Body)) {
+    throw new Error('Il file non sembra un PDF valido.');
+  }
 
-  return parseCVFlow({ pdfDataUri: parsed.pdfDataUri });
+  const rateKey = `parse-cv:${caller.uid}`;
+  const quota = checkRateLimit(rateKey, CV_RATE_LIMIT);
+  if (!quota.allowed) {
+    throw new Error('Quota analisi IA esaurita. Riprova tra un ora.');
+  }
+
+  try {
+    return await parseCVFlow({ pdfDataUri: parsed.pdfDataUri });
+  } catch (err) {
+    refundRateLimit(rateKey);
+    throw err;
+  }
 }
 
 const parseCVFlow = ai.defineFlow(

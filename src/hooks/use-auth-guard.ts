@@ -57,9 +57,6 @@ export function useAuthGuard(requiredRole?: UserRole) {
       return;
     }
 
-    // Solo qui, a controlli superati, si (ri)emette il cookie di sessione.
-    void refreshSessionCookieIfNeeded(user);
-
     // Se l'utente è bloccato o pendente e cerca di entrare nella dashboard
     if (userProfile.status === 'Pending' && !window.location.pathname.includes('pending-approval')) {
       router.replace('/pending-approval');
@@ -81,6 +78,9 @@ export function useAuthGuard(requiredRole?: UserRole) {
       router.replace('/dashboard');
       return;
     }
+
+    // Solo qui, a TUTTI i controlli superati, si (ri)emette il cookie.
+    void refreshSessionCookieIfNeeded(user);
   }, [user, userProfile, isUserLoading, isProfileLoading, router, requiredRole]);
 
   return { 
