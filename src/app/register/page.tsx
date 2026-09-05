@@ -145,10 +145,19 @@ export default function RegisterPage() {
         throw batchError;
       }
 
-      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch((err) => {
+      notifyAdminOfNewUser({
+        email: email.trim().toLowerCase(),
+        role: userRole,
+        name: displayName,
+        idToken: await user.getIdToken(),
+      }).catch((err) => {
         console.error("Registrazione: notifica admin fallita.", err);
       });
-      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch((err) => {
+      sendWelcomePendingEmail(
+        email.trim().toLowerCase(),
+        sanitize(firstName),
+        await user.getIdToken()
+      ).catch((err) => {
         console.error("Registrazione: email di benvenuto fallita.", err);
       });
 

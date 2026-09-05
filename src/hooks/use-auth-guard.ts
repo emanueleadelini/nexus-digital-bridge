@@ -45,25 +45,41 @@ export function useAuthGuard(requiredRole?: UserRole) {
       return;
     }
 
+    // Fail-closed: senza email verificata non si entra da nessuna parte.
+    if (!user.emailVerified) {
+      router.replace('/login');
+      return;
+    }
+
+    // Fail-closed: senza profilo leggibile non si entra (niente default).
+    if (!userProfile) {
+      router.replace('/login');
+      return;
+    }
+
+    // Solo qui, a controlli superati, si (ri)emette il cookie di sessione.
     void refreshSessionCookieIfNeeded(user);
 
-    if (userProfile) {
-      // Se l'utente è bloccato o pendente e cerca di entrare nella dashboard
-      if (userProfile.status === 'Pending' && !window.location.pathname.includes('pending-approval')) {
-        router.replace('/pending-approval');
-        return;
-      }
+    // Se l'utente è bloccato o pendente e cerca di entrare nella dashboard
+    if (userProfile.status === 'Pending' && !window.location.pathname.includes('pending-approval')) {
+      router.replace('/pending-approval');
+      return;
+    }
 
-      if (userProfile.status === 'Rejected') {
-        router.replace('/rejected');
-        return;
-      }
+    if (userProfile.status === 'Rejected') {
+      router.replace('/rejected');
+      return;
+    }
 
-      // Controllo ruolo specifico
-      if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'Admin') {
-        router.replace('/dashboard');
-        return;
-      }
+    if (userProfile.status !== 'Approved') {
+      router.replace('/login');
+      return;
+    }
+
+    // Controllo ruolo specifico
+    if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'Admin') {
+      router.replace('/dashboard');
+      return;
     }
   }, [user, userProfile, isUserLoading, isProfileLoading, router, requiredRole]);
 

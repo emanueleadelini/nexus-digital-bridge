@@ -71,8 +71,10 @@ export function DashboardSidebar() {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc(userRef);
 
-  // Determina il ruolo in base al profilo Firestore, con fallback
-  const role = (userProfile?.role?.toLowerCase() as "company" | "institute" | "admin") || "company";
+  // Ruolo dal profilo Firestore. Senza ruolo noto non si mostra nessuna
+  // navigazione di ruolo (niente default silenzioso a company).
+  const rawRole = userProfile?.role?.toLowerCase();
+  const role = rawRole === "company" || rawRole === "institute" || rawRole === "admin" ? rawRole : null;
 
   // Conteggio utenti in attesa (solo per admin)
   const pendingCompaniesRef = useMemoFirebase(() => {

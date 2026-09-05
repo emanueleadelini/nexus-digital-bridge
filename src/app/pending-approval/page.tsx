@@ -23,8 +23,9 @@ export default function PendingApprovalPage() {
   const { data: profile } = useDoc(userRef);
 
   useEffect(() => {
+    // Appena approvato, rimanda al login: serve una sessione nuova (cookie).
     if (profile?.status === 'Approved') {
-      router.push('/dashboard');
+      router.push('/login');
     }
   }, [profile, router]);
 

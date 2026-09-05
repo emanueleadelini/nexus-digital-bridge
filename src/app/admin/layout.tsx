@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc } from "firebase/firestore";
 import { Loader2 } from "lucide-react";
 
+/**
+ * Guardia area admin: solo Admin approvato con email verificata.
+ * Fail-closed: profilo mancante/illeggibile = uscita, mai spinner infinito.
+ */
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
   const db = useFirestore();
   const router = useRouter();
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const userRef = useMemoFirebase(() => {
     if (!db || !user) return null;
@@ -21,15 +26,36 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isUserLoading || isProfileLoading) return;
 
-    if (!user) {
+    if (!user || !user.emailVerified) {
       router.replace("/login");
       return;
     }
 
-    if (userProfile && userProfile.role !== "Admin") {
+    if (!userProfile) {
+      setLoadFailed(true);
+      return;
+    }
+
+    if (userProfile.role !== "Admin" || userProfile.status !== "Approved") {
       router.replace("/dashboard");
     }
   }, [user, userProfile, isUserLoading, isProfileLoading, router]);
+
+  if (loadFailed) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-8">
+        <div className="text-center space-y-4">
+          <p className="text-slate-600 font-medium">Impossibile caricare il profilo amministratore.</p>
+          <button
+            onClick={() => router.replace("/login")}
+            className="text-primary font-bold hover:underline"
+          >
+            Torna al login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (isUserLoading || isProfileLoading || !userProfile) {
     return (
@@ -39,7 +65,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (userProfile.role !== "Admin") {
+  if (userProfile.role !== "Admin" || userProfile.status !== "Approved") {
     return null;
   }
 

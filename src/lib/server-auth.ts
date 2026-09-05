@@ -106,6 +106,25 @@ export async function getCallerProfile(idToken: string): Promise<CallerProfile> 
 }
 
 /**
+ * Richiede amministratore approvato con email verificata.
+ * Usata dalle action di approvazione/rifiuto (email ufficiali).
+ */
+export async function requireAdminCaller(idToken: string): Promise<CallerProfile> {
+  const caller = await getCallerProfile(idToken);
+
+  if (!caller.emailVerified) {
+    throw new Error('Email non verificata.');
+  }
+  if (caller.status !== 'Approved') {
+    throw new Error('Account non approvato.');
+  }
+  if (caller.role !== 'Admin') {
+    throw new Error('Operazione riservata agli amministratori.');
+  }
+  return caller;
+}
+
+/**
  * Richiede utente autenticato con ruolo Institute (o Admin) e stato Approved.
  * Usata dalle action che consumano quota AI a pagamento.
  */
