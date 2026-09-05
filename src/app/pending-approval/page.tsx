@@ -26,6 +26,8 @@ export default function PendingApprovalPage() {
     // Appena approvato, rimanda al login: serve una sessione nuova (cookie).
     if (profile?.status === 'Approved') {
       router.push('/login');
+    } else if (profile?.status === 'Rejected') {
+      router.push('/rejected');
     }
   }, [profile, router]);
 

@@ -5,8 +5,9 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   experimental: {
     serverActions: {
-      // Il parsing CV invia PDF fino a 10MB come data URI (base64 +33%).
-      bodySizeLimit: '15mb',
+      // Tetto basso globale: i PDF viaggiano sulla Route /api/parse-cv
+      // (auth-first + Content-Length), non sulle action.
+      bodySizeLimit: '2mb',
     },
   },
   images: {

@@ -2,7 +2,9 @@
  * Rate limiter in memoria a finestra scorrevole per le Server Action.
  *
  * Limita gli abusi di un singolo utente autenticato su una istanza.
- * Con piu istanze serve un limitatore distribuito (nota per lo scale-out).
+ * VINCOLO OPERATIVO: stato per-processo. Vale su una singola istanza
+ * long-lived; con piu istanze serve un limitatore distribuito (Redis o
+ * transazione Firestore). Vedi runbook di deploy.
  */
 
 export interface RateLimitOptions {
@@ -16,45 +18,61 @@ export interface RateLimitResult {
   retryAfterMs: number;
 }
 
-const buckets = new Map<string, number[]>();
+interface Bucket {
+  hits: number[];
+  windowMs: number;
+}
+
+const buckets = new Map<string, Bucket>();
 const MAX_TRACKED_KEYS = 5000;
 
-function pruneExpiredKeys(nowMs: number, windowMs: number): void {
-  // Spazza sempre le chiavi scadute; oltre il tetto, butta anche le piu vecchie.
-  for (const key of Array.from(buckets.keys())) {
-    const hits = buckets.get(key) ?? [];
-    if (hits.every((hit) => nowMs - hit >= windowMs)) {
+function isExpired(bucket: Bucket, nowMs: number): boolean {
+  return bucket.hits.every((hit) => nowMs - hit >= bucket.windowMs);
+}
+
+function prune(nowMs: number): void {
+  // Spazza solo le chiavi scadute secondo la LORO finestra.
+  for (const [key, bucket] of Array.from(buckets)) {
+    if (isExpired(bucket, nowMs)) {
       buckets.delete(key);
     }
   }
+  // Oltre il tetto, butta le chiavi scadute; se non basta, logga e
+  // rifiuta nuove chiavi (fail-closed) invece di azzerare quote attive.
   if (buckets.size > MAX_TRACKED_KEYS) {
-    const overflow = buckets.size - MAX_TRACKED_KEYS;
-    for (const key of Array.from(buckets.keys()).slice(0, overflow)) {
-      buckets.delete(key);
-    }
+    console.error(
+      `Rate limiter saturo (${buckets.size} chiavi): nuove chiavi rifiutate fino a spazio libero.`
+    );
   }
 }
 
 /** Registra un tentativo per la chiave e dice se e consentito. */
 export function checkRateLimit(key: string, options: RateLimitOptions): RateLimitResult {
   const nowMs = Date.now();
-  pruneExpiredKeys(nowMs, options.windowMs);
+  prune(nowMs);
 
-  const previous = buckets.get(key) ?? [];
-  const hits = previous.filter((hit) => nowMs - hit < options.windowMs);
+  if (!buckets.has(key) && buckets.size >= MAX_TRACKED_KEYS) {
+    return { allowed: false, remaining: 0, retryAfterMs: options.windowMs };
+  }
+
+  const bucket = buckets.get(key) ?? { hits: [], windowMs: options.windowMs };
+  bucket.windowMs = options.windowMs;
+  const hits = bucket.hits.filter((hit) => nowMs - hit < bucket.windowMs);
 
   if (hits.length >= options.limit) {
-    buckets.set(key, hits);
+    bucket.hits = hits;
+    buckets.set(key, bucket);
     const oldest = hits[0] ?? nowMs;
     return {
       allowed: false,
       remaining: 0,
-      retryAfterMs: Math.max(0, options.windowMs - (nowMs - oldest)),
+      retryAfterMs: Math.max(0, bucket.windowMs - (nowMs - oldest)),
     };
   }
 
   hits.push(nowMs);
-  buckets.set(key, hits);
+  bucket.hits = hits;
+  buckets.set(key, bucket);
 
   return {
     allowed: true,
@@ -73,12 +91,12 @@ export function resetRateLimit(key: string): void {
  * Rimuove l'ultimo hit registrato per la chiave.
  */
 export function refundRateLimit(key: string): void {
-  const hits = buckets.get(key);
-  if (!hits || hits.length === 0) return;
-  hits.pop();
-  if (hits.length === 0) {
+  const bucket = buckets.get(key);
+  if (!bucket || bucket.hits.length === 0) return;
+  bucket.hits.pop();
+  if (bucket.hits.length === 0) {
     buckets.delete(key);
   } else {
-    buckets.set(key, hits);
+    buckets.set(key, bucket);
   }
 }

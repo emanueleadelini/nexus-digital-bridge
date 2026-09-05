@@ -1,8 +1,19 @@
 'use server';
 
 import { Resend } from 'resend';
+import * as Sentry from '@sentry/nextjs';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getCallerProfile, requireAdminCaller } from '@/lib/server-auth';
+
+/** Log locale + Sentry (gli errori email non devono mai passare inosservati). */
+function reportErr(message: string, err: unknown): void {
+  reportErr(message, err);
+  try {
+    Sentry.captureException(err);
+  } catch {
+    // Mai rompere il flusso per il monitoraggio.
+  }
+}
 
 const APP_BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://www.nexusdigitalbridge.it';
 // Mittente di prova Resend: da sostituire col dominio verificato (vedi B3).
@@ -27,8 +38,6 @@ function esc(value: string): string {
 
 interface NotifyAdminInput {
   email: string;
-  role: string;
-  name: string;
   idToken: string;
 }
 
@@ -37,10 +46,17 @@ interface NotifyAdminInput {
  * Ammessa solo all'utente appena registrato (l'email deve coincidere
  * con quella del token), con rate limit anti-spam.
  */
-export async function notifyAdminOfNewUser({ email, role, name, idToken }: NotifyAdminInput) {
+export async function notifyAdminOfNewUser({ email, idToken }: { email: string; idToken: string }) {
   try {
     const caller = await getCallerProfile(idToken);
     if (caller.email?.toLowerCase() !== email.trim().toLowerCase()) {
+      return { success: false as const, error: 'forbidden' as const };
+    }
+    // Solo profili in attesa: niente spam da account attivi.
+    if (caller.status !== 'Pending') {
+      return { success: false as const, error: 'forbidden' as const };
+    }
+    if (caller.role !== 'Company' && caller.role !== 'Institute') {
       return { success: false as const, error: 'forbidden' as const };
     }
     const quota = checkRateLimit(`notify:${caller.uid}`, { limit: 3, windowMs: 60 * 60 * 1000 });
@@ -51,19 +67,23 @@ export async function notifyAdminOfNewUser({ email, role, name, idToken }: Notif
     const resend = getResend();
     if (!resend) return { success: false as const, error: 'config_missing' as const };
 
+    // Nome e ruolo presi dal profilo verificato, mai dal client.
+    const displayName =
+      `${caller.firstName} ${caller.lastName}`.trim() || caller.email || 'Nuovo utente';
+
     await resend.emails.send({
       from: FROM,
       to: [process.env.ADMIN_EMAIL as string],
-      subject: `Nuova Registrazione in Attesa: ${esc(role)}`,
+      subject: `Nuova Registrazione in Attesa: ${esc(caller.role)}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #1a237e; border: 1px solid #eee; border-radius: 12px;">
           <h1 style="color: #1a237e;">Nuovo Utente su Nexus Digital Bridge</h1>
           <p>Un nuovo utente ha completato la registrazione e attende l'approvazione per accedere alla piattaforma.</p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
           <ul style="list-style: none; padding: 0;">
-            <li style="margin-bottom: 10px;"><strong>Nome/Ragione Sociale:</strong> ${esc(name)}</li>
+            <li style="margin-bottom: 10px;"><strong>Nome/Ragione Sociale:</strong> ${esc(displayName)}</li>
             <li style="margin-bottom: 10px;"><strong>Email:</strong> ${esc(email)}</li>
-            <li style="margin-bottom: 10px;"><strong>Ruolo Richiesto:</strong> ${esc(role)}</li>
+            <li style="margin-bottom: 10px;"><strong>Ruolo Richiesto:</strong> ${esc(caller.role)}</li>
           </ul>
           <div style="margin-top: 30px;">
             <a href="${APP_BASE_URL}/admin/users"
@@ -76,7 +96,7 @@ export async function notifyAdminOfNewUser({ email, role, name, idToken }: Notif
     });
     return { success: true as const };
   } catch (err) {
-    console.error('Errore notifica admin:', err);
+    reportErr('Errore notifica admin:', err);
     return { success: false as const, error: 'send_failed' as const };
   }
 }
@@ -85,10 +105,13 @@ export async function notifyAdminOfNewUser({ email, role, name, idToken }: Notif
  * Email di cortesia all'utente appena registrato.
  * Solo al proprietario del token, con rate limit.
  */
-export async function sendWelcomePendingEmail(userEmail: string, userName: string, idToken: string) {
+export async function sendWelcomePendingEmail(userEmail: string, idToken: string) {
   try {
     const caller = await getCallerProfile(idToken);
     if (caller.email?.toLowerCase() !== userEmail.trim().toLowerCase()) {
+      return { success: false as const, error: 'forbidden' as const };
+    }
+    if (caller.status !== 'Pending') {
       return { success: false as const, error: 'forbidden' as const };
     }
     const quota = checkRateLimit(`welcome:${caller.uid}`, { limit: 3, windowMs: 60 * 60 * 1000 });
@@ -105,7 +128,7 @@ export async function sendWelcomePendingEmail(userEmail: string, userName: strin
       subject: 'Registrazione ricevuta - Nexus Digital Bridge',
       html: `
         <div style="font-family: sans-serif; padding: 20px; color: #1a237e;">
-          <h1 style="color: #1a237e;">Benvenuto su Nexus Digital Bridge, ${esc(userName)}!</h1>
+          <h1 style="color: #1a237e;">Benvenuto su Nexus Digital Bridge, ${esc(caller.firstName || 'Utente')}!</h1>
           <p>Grazie per esserti registrato sulla nostra piattaforma.</p>
           <p>Ti informiamo che la tua richiesta è attualmente in fase di verifica da parte del nostro team amministrativo. Questo processo di solito richiede meno di 24 ore.</p>
           <p>Riceverai un'ulteriore email non appena il tuo profilo sarà stato approvato e potrai iniziare a usare il sistema di matching.</p>
@@ -115,7 +138,7 @@ export async function sendWelcomePendingEmail(userEmail: string, userName: strin
     });
     return { success: true as const };
   } catch (err) {
-    console.error('Errore invio welcome email:', err);
+    reportErr('Errore invio welcome email:', err);
     return { success: false as const, error: 'send_failed' as const };
   }
 }
@@ -152,7 +175,7 @@ async function readAnyUserProfile(
       status: doc.fields?.status?.stringValue ?? '',
     };
   } catch (err) {
-    console.error('Lettura profilo destinatario fallita:', err);
+    reportErr('Lettura profilo destinatario fallita:', err);
     return null;
   }
 }
@@ -198,7 +221,7 @@ export async function sendApprovalEmail(targetUserId: string, idToken: string) {
     });
     return { success: true as const };
   } catch (err) {
-    console.error('Errore invio approval email:', err);
+    reportErr('Errore invio approval email:', err);
     return { success: false as const, error: 'send_failed' as const };
   }
 }
@@ -239,7 +262,7 @@ export async function sendRejectionEmail(targetUserId: string, idToken: string) 
     });
     return { success: true as const };
   } catch (err) {
-    console.error('Errore invio rejection email:', err);
+    reportErr('Errore invio rejection email:', err);
     return { success: false as const, error: 'send_failed' as const };
   }
 }

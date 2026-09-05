@@ -18,8 +18,10 @@ import { doc, collection, serverTimestamp, writeBatch } from "firebase/firestore
 import { useRouter } from "next/navigation";
 import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
 
-// Rimuove caratteri HTML pericolosi per prevenire XSS
-const sanitize = (str: string) => str.replace(/[<>"'`]/g, '').trim();
+// Normalizza i nomi: trim + spazi singoli. Niente stripping di caratteri
+// (apostrofi come D'Angelo sono legittimi): l'escape avviene in output
+// (React scappa in automatico, le email usano esc()).
+const sanitize = (str: string) => str.replace(/\s+/g, ' ').trim();
 
 export default function RegisterPage() {
   const [role, setRole] = useState<string>("company");
@@ -145,26 +147,23 @@ export default function RegisterPage() {
         throw batchError;
       }
 
-      notifyAdminOfNewUser({
-        email: email.trim().toLowerCase(),
-        role: userRole,
-        name: displayName,
-        idToken: await user.getIdToken(),
-      }).then((res) => {
-        if (!res.success) console.error("Registrazione: notifica admin non inviata.", res.error);
-      }).catch((err) => {
+      // Notifiche fire-and-forget: il token si prende dentro la catena,
+      // cosi un intoppo non sporca l'esito della registrazione.
+      user.getIdToken().then((idToken) =>
+        notifyAdminOfNewUser({ email: email.trim().toLowerCase(), idToken }).then((res) => {
+          if (!res.success) console.error("Registrazione: notifica admin non inviata.", res.error);
+        })
+      ).catch((err) => {
         console.error("Registrazione: notifica admin fallita.", err);
       });
-      sendWelcomePendingEmail(
-        email.trim().toLowerCase(),
-        sanitize(firstName),
-        await user.getIdToken()
-      ).then((res) => {
-        if (res && !res.success) {
-          console.error("Registrazione: email di benvenuto non inviata.", res.error);
-          toast({ title: "Attenzione", description: "Registrazione ok, ma l'email di conferma potrebbe non essere arrivata." });
-        }
-      }).catch((err) => {
+      user.getIdToken().then((idToken) =>
+        sendWelcomePendingEmail(email.trim().toLowerCase(), idToken).then((res) => {
+          if (res && !res.success) {
+            console.error("Registrazione: email di benvenuto non inviata.", res.error);
+            toast({ title: "Attenzione", description: "Registrazione ok, ma l'email di conferma potrebbe non essere arrivata." });
+          }
+        })
+      ).catch((err) => {
         console.error("Registrazione: email di benvenuto fallita.", err);
       });
 

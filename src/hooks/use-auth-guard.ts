@@ -2,10 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useAuth, useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserProfile, UserRole } from '@/types';
-import { setSessionCookie } from '@/lib/session-cookie';
+import { setSessionCookie, clearSessionCookie } from '@/lib/session-cookie';
 
 /** Rinnova il cookie di sessione se il token scade tra meno di 10 minuti. */
 async function refreshSessionCookieIfNeeded(user: { getIdToken: (force?: boolean) => Promise<string> }) {
@@ -23,10 +24,14 @@ async function refreshSessionCookieIfNeeded(user: { getIdToken: (force?: boolean
 }
 
 /**
- * Hook per proteggere le rotte della dashboard e gestire i redirect in base allo stato dell'utente.
+ * Guardia delle pagine protette. Fail-closed per contratto:
+ * `user` resta null finche email verificata + profilo + Approved
+ * (+ ruolo richiesto) non sono confermati. Le pagine non devono creare
+ * query Firestore ne mostrare UI di ruolo prima di `ready`.
  */
 export function useAuthGuard(requiredRole?: UserRole) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const db = useFirestore();
   const router = useRouter();
 
@@ -37,55 +42,74 @@ export function useAuthGuard(requiredRole?: UserRole) {
 
   const { data: userProfile, isLoading: isProfileLoading } = useDoc<UserProfile>(userRef);
 
+  const checksDone = !isUserLoading && !isProfileLoading;
+  const roleOk = !requiredRole || userProfile?.role === requiredRole || userProfile?.role === 'Admin';
+  const ready =
+    checksDone &&
+    !!user &&
+    user.emailVerified &&
+    !!userProfile &&
+    userProfile.status === 'Approved' &&
+    roleOk;
+
   useEffect(() => {
-    if (isUserLoading || isProfileLoading) return;
+    if (!checksDone) return;
+
+    const revokeAndGo = async (target: string) => {
+      clearSessionCookie();
+      if (auth) {
+        try {
+          await signOut(auth);
+        } catch {
+          // Prosegui comunque col redirect.
+        }
+      }
+      router.replace(target);
+    };
 
     if (!user) {
       router.replace('/login');
       return;
     }
 
-    // Fail-closed: senza email verificata non si entra da nessuna parte.
     if (!user.emailVerified) {
-      router.replace('/login');
+      void revokeAndGo('/login');
       return;
     }
 
-    // Fail-closed: senza profilo leggibile non si entra (niente default).
     if (!userProfile) {
-      router.replace('/login');
+      void revokeAndGo('/login');
       return;
     }
 
-    // Se l'utente è bloccato o pendente e cerca di entrare nella dashboard
     if (userProfile.status === 'Pending' && !window.location.pathname.includes('pending-approval')) {
       router.replace('/pending-approval');
       return;
     }
 
     if (userProfile.status === 'Rejected') {
-      router.replace('/rejected');
+      void revokeAndGo('/rejected');
       return;
     }
 
     if (userProfile.status !== 'Approved') {
-      router.replace('/login');
+      void revokeAndGo('/login');
       return;
     }
 
-    // Controllo ruolo specifico
-    if (requiredRole && userProfile.role !== requiredRole && userProfile.role !== 'Admin') {
+    if (!roleOk) {
       router.replace('/dashboard');
       return;
     }
 
     // Solo qui, a TUTTI i controlli superati, si (ri)emette il cookie.
     void refreshSessionCookieIfNeeded(user);
-  }, [user, userProfile, isUserLoading, isProfileLoading, router, requiredRole]);
+  }, [user, userProfile, checksDone, roleOk, router, requiredRole, auth]);
 
-  return { 
-    user, 
-    userProfile, 
-    isLoading: isUserLoading || isProfileLoading 
+  return {
+    user: ready ? user : null,
+    userProfile: ready ? userProfile : null,
+    isLoading: !checksDone,
+    ready,
   };
 }

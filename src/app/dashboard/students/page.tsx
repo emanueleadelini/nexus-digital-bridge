@@ -24,7 +24,37 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from "@/firebas
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { collection, addDoc, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { parseStudentCV } from "@/ai/flows/parse-cv-flow";
+
+// Timeout lato client per l'analisi IA (evita dialog incastrato all'infinito).
+const PARSE_TIMEOUT_MS = 90_000;
+
+interface ParseCVResult {
+  name: string;
+  studentClass: string;
+  summary: string;
+  suggestedSectorIds: string[];
+}
+
+/** Chiama la Route /api/parse-cv con auth-first (niente action gigante). */
+async function requestParseCV(pdfDataUri: string, idToken: string): Promise<ParseCVResult> {
+  const res = await fetch('/api/parse-cv', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${idToken}`,
+    },
+    body: JSON.stringify({ pdfDataUri }),
+    signal: AbortSignal.timeout(PARSE_TIMEOUT_MS),
+  });
+  const data = (await res.json().catch(() => ({}))) as { error?: string } & Partial<ParseCVResult>;
+  if (!res.ok) {
+    throw new Error(data.error || "Analisi fallita.");
+  }
+  if (!data.name || !data.summary) {
+    throw new Error("Risposta IA incompleta.");
+  }
+  return data as ParseCVResult;
+}
 
 export default function StudentsPage() {
   const db = useFirestore();
@@ -94,7 +124,7 @@ export default function StudentsPage() {
           setParsingStatus("Gemini sta analizzando il CV Europass...");
           if (!user) throw new Error("Sessione scaduta. Accedi di nuovo.");
           const idToken = await user.getIdToken();
-          const result = await parseStudentCV({ pdfDataUri: base64, idToken });
+          const result = await requestParseCV(base64, idToken);
           
           setParsingStatus("Estrazione competenze completata!");
           setNewStudent({

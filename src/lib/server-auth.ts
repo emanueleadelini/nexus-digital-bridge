@@ -13,12 +13,16 @@
  * middleware per un redirect veloce, l'autorizzazione vera e qui.
  */
 
+import { checkRateLimit } from './rate-limit';
+
 export interface CallerProfile {
   uid: string;
   email?: string;
   emailVerified: boolean;
   role: string;
   status: string;
+  firstName: string;
+  lastName: string;
 }
 
 const MAX_TOKEN_LENGTH = 8192;
@@ -28,7 +32,21 @@ function googleFetch(input: string, init: RequestInit): Promise<Response> {
   return fetch(input, { ...init, cache: 'no-store', signal: AbortSignal.timeout(GOOGLE_TIMEOUT_MS) });
 }
 
-async function lookupUid(idToken: string): Promise<{ uid: string; email?: string; emailVerified: boolean }> {
+/** Throttle leggero per IP prima delle verifiche costose (anti-flood). */
+export function throttleIp(ip: string | null): void {
+  if (!ip) return;
+  const quota = checkRateLimit(`ip-lookup:${ip}`, {
+    limit: 60,
+    windowMs: 60 * 1000,
+  });
+  if (!quota.allowed) {
+    throw new Error('Troppe richieste. Riprova tra poco.');
+  }
+}
+
+async function lookupUid(
+  idToken: string
+): Promise<{ uid: string; email?: string; emailVerified: boolean }> {
   const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
   if (!apiKey) {
     throw new Error('Configurazione Firebase mancante sul server.');
@@ -53,16 +71,24 @@ async function lookupUid(idToken: string): Promise<{ uid: string; email?: string
   }
 
   const data = (await res.json()) as {
-    users?: Array<{ localId?: string; email?: string; emailVerified?: boolean }>;
+    users?: Array<{ localId?: string; email?: string; emailVerified?: boolean; disabled?: boolean }>;
   };
-  const uid = data.users?.[0]?.localId;
-  if (!uid) {
+  const record = data.users?.[0];
+  // Account disabilitato o revocato: token non piu valido anche se non scaduto.
+  if (!record?.localId || record.disabled === true) {
     throw new Error('Sessione non valida. Accedi di nuovo.');
   }
-  return { uid, email: data.users?.[0]?.email, emailVerified: data.users?.[0]?.emailVerified === true };
+  return {
+    uid: record.localId,
+    email: record.email,
+    emailVerified: record.emailVerified === true,
+  };
 }
 
-async function readUserProfile(uid: string, idToken: string): Promise<{ role: string; status: string }> {
+async function readUserProfile(
+  uid: string,
+  idToken: string
+): Promise<{ role: string; status: string; firstName: string; lastName: string }> {
   const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
   if (!projectId) {
     throw new Error('Configurazione Firebase mancante sul server.');
@@ -86,31 +112,43 @@ async function readUserProfile(uid: string, idToken: string): Promise<{ role: st
   }
 
   const doc = (await res.json()) as {
-    fields?: { role?: { stringValue?: string }; status?: { stringValue?: string } };
+    fields?: {
+      role?: { stringValue?: string };
+      status?: { stringValue?: string };
+      firstName?: { stringValue?: string };
+      lastName?: { stringValue?: string };
+    };
   };
   return {
     role: doc.fields?.role?.stringValue ?? '',
     status: doc.fields?.status?.stringValue ?? '',
+    firstName: doc.fields?.firstName?.stringValue ?? '',
+    lastName: doc.fields?.lastName?.stringValue ?? '',
   };
 }
 
-/** Verifica il token e restituisce uid + ruolo + stato. Lancia se non valido. */
-export async function getCallerProfile(idToken: string): Promise<CallerProfile> {
+/**
+ * Verifica il token e restituisce uid + ruolo + stato. Lancia se non valido.
+ * Il chiamante puo passare l'IP (header) per il throttle anti-flood.
+ */
+export async function getCallerProfile(idToken: string, ip: string | null = null): Promise<CallerProfile> {
   if (!idToken || typeof idToken !== 'string' || idToken.length > MAX_TOKEN_LENGTH) {
     throw new Error('Sessione non valida. Accedi di nuovo.');
   }
 
+  throttleIp(ip);
+
   const { uid, email, emailVerified } = await lookupUid(idToken);
-  const { role, status } = await readUserProfile(uid, idToken);
-  return { uid, email, emailVerified, role, status };
+  const { role, status, firstName, lastName } = await readUserProfile(uid, idToken);
+  return { uid, email, emailVerified, role, status, firstName, lastName };
 }
 
 /**
  * Richiede amministratore approvato con email verificata.
  * Usata dalle action di approvazione/rifiuto (email ufficiali).
  */
-export async function requireAdminCaller(idToken: string): Promise<CallerProfile> {
-  const caller = await getCallerProfile(idToken);
+export async function requireAdminCaller(idToken: string, ip: string | null = null): Promise<CallerProfile> {
+  const caller = await getCallerProfile(idToken, ip);
 
   if (!caller.emailVerified) {
     throw new Error('Email non verificata.');
@@ -128,8 +166,8 @@ export async function requireAdminCaller(idToken: string): Promise<CallerProfile
  * Richiede utente autenticato con ruolo Institute (o Admin) e stato Approved.
  * Usata dalle action che consumano quota AI a pagamento.
  */
-export async function requireInstituteCaller(idToken: string): Promise<CallerProfile> {
-  const caller = await getCallerProfile(idToken);
+export async function requireInstituteCaller(idToken: string, ip: string | null = null): Promise<CallerProfile> {
+  const caller = await getCallerProfile(idToken, ip);
 
   if (!caller.emailVerified) {
     throw new Error("Verifica la tua email prima di usare l'analisi IA.");
