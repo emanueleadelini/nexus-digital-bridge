@@ -14,9 +14,12 @@ Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
   import via `scripts/import-firestore.js`. Risultato: 8 utenti reali +
   20 stub demo, 13 aziende, 14 istituti, 101 CV, 3 chat, 6 messaggi,
   13 settori, 31 tipologie.
-- **Admin `emanueleadelini@gmail.com` attivo**: password impostata via hash
-  scrypt compatibile Better Auth, salvata in `/root/.nexus-admin-pw` (600).
-  Login verificato, admin/stats 200, 29 utenti in lista.
+- **Admin `emanueleadelini@gmail.com` è `SuperAdmin`** (gerarchia:
+  `SuperAdmin` > `Admin` > `Company`/`Institute`). Solo il SuperAdmin può
+  promuovere un Company/Institute ad `Admin` (reti aziende/scuole) o revocarlo:
+  `PATCH /api/admin/users/:id {role:"Admin"|"revoke"}` → su revoke ripristina
+  `previous_role`. Il SuperAdmin non è modificabile via API né da Admin.
+  Verificato in prod: promote demo-institute-9 → Admin → revoke → Institute.
 - Test container `nexus-test` su :8813 ancora attivo (stessa immagine).
 - **Password utenti migrati NON esistono**: ogni utente reale deve fare
   "password dimenticata" al primo accesso (o admin reset via SQL con
