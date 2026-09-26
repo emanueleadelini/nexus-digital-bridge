@@ -22,15 +22,12 @@ const LLM_API_KEY = process.env.LLM_API_KEY || process.env.CHATMATE_KEY || "";
 const LLM_MODEL = process.env.LLM_MODEL || process.env.CHATMATE_MODEL || "gpt-oss-120b";
 
 export async function extractPdfText(buffer: Buffer): Promise<string> {
-  // pdf-parse v2: classe PDFParse con getText(); import dinamico per il build Next
-  const { PDFParse } = await import("pdf-parse");
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  try {
-    const result = await parser.getText();
-    return (result.text || "").trim();
-  } finally {
-    await parser.destroy();
-  }
+  // pdf-parse 1.x: API a funzione, puro JS (niente canvas/DOMMatrix)
+  const pdfParse = (await import("pdf-parse")).default as unknown as (
+    b: Buffer
+  ) => Promise<{ text: string }>;
+  const result = await pdfParse(buffer);
+  return (result.text || "").trim();
 }
 
 export async function parseCVText(pdfText: string): Promise<ParsedCV> {
