@@ -5,6 +5,14 @@
  * (sul server valorizzate da /root/shared/chatmate.env).
  */
 import { INDUSTRY_SECTORS } from "@/lib/constants";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import { writeFile, unlink } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
+import { randomUUID } from "crypto";
+
+const execFileP = promisify(execFile);
 
 export interface ParsedCV {
   name: string;
@@ -22,13 +30,18 @@ const LLM_API_KEY = process.env.LLM_API_KEY || process.env.CHATMATE_KEY || "";
 const LLM_MODEL = process.env.LLM_MODEL || process.env.CHATMATE_MODEL || "gpt-oss-120b";
 
 export async function extractPdfText(buffer: Buffer): Promise<string> {
-  // pdf-parse 1.x puro JS. Import dal file lib per bypassare il debug-mode
-  // di index.js (cerca ./test/data/*.pdf quando module.parent e' undefined).
-  const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as unknown as (
-    b: Buffer
-  ) => Promise<{ text: string }>;
-  const result = await pdfParse(buffer);
-  return (result.text || "").trim();
+  // pdftotext (poppler): parser PDF di riferimento, gestisce qualunque variante.
+  // Installato nel Dockerfile via `apk add poppler-utils`.
+  const tmp = join(tmpdir(), `cv-${randomUUID()}.pdf`);
+  try {
+    await writeFile(tmp, buffer);
+    const { stdout } = await execFileP("pdftotext", ["-layout", tmp, "-"], {
+      maxBuffer: 8 * 1024 * 1024,
+    });
+    return stdout.trim();
+  } finally {
+    await unlink(tmp).catch(() => {});
+  }
 }
 
 export async function parseCVText(pdfText: string): Promise<ParsedCV> {
