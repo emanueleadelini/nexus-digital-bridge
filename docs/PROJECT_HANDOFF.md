@@ -27,10 +27,11 @@ Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata n
   istituto→azienda senza match → **403** ✅; estraneo su messaggi → **403** ✅
 - Upload PDF → `pdf_path` salvato su volume; download `/api/cv/[id]/pdf` ✅
   - policy: istituto solo i propri (403 altrui), company/admin 200
-- **Parsing AI E2E verificato**: `pdftotext` (poppler in Docker) estrae testo,
-  LLM OVH Kepler (`LLM_BASE_URL=https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`,
-  model `gpt-oss-120b`, key da `/root/shared/chatmate.env`) → nome/classe/
-  summary/settori/skills salvati in DB ✅
+- **Parsing AI E2E verificato**: `pdftotext` (poppler in Docker) estrae testo;
+  LLM **primario Regolo AI** (`LLM_BASE_URL=https://api.regolo.ai/v1`,
+  model `glm5.2` — Italia; chiave da `ad-next-cantiere-suite/.env.local`
+  var `OVH_AI_API_KEY`), **fallback OVH Kepler** (`gpt-oss-120b`, chatmate.env)
+  → nome/classe/summary/settori/skills salvati in DB ✅
 - CV AI-parsed → match 90% con azienda ("ICT e Digitale"), `chatStarted` ✅
 - Notifiche in-app + badge sidebar ✅
 - Route pubbliche: `/api/content`, `/api/blog`, `/api/blog/[id]`,
@@ -46,7 +47,11 @@ Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata n
   su PDF validi (pdf.js 1.10 vendored) → **sostituito con `pdftotext` (poppler)**
   via `apk add poppler-utils` nel Dockerfile runner; deps rimosse.
 - llama-swap locale binda `127.0.0.1:11600` → irraggiungibile dal bridge docker;
-  puntato `LLM_BASE_URL` a OVH Kepler (rotta autorizzata chatmate.env).
+  usato **Regolo AI glm5.2** primario (decisione Capo: tutto in Italia) +
+  OVH Kepler fallback nel codice (`callLLM` con retry).
+- SMTP risolto: **postfix già installato sull'host**, attivato e autorizzata
+  subnet docker `172.16.0.0/12` in `mynetworks`; invio reale verificato
+  (mail.log: accept). Fix formato MAIL_FROM (display name tra virgolette).
 - `blogPosts.coverImage` non salvato dal POST admin → fix.
 - Email Resend (dead code) → `src/server/mail.ts` nodemailer con dominio corretto.
 - Nota convenzione: `sector_ids` e `institute_types` si salvano come **nomi**
@@ -54,17 +59,16 @@ Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata n
 
 ## Da fare (prossimi passi)
 
-1. ~~Fix parsing AI~~ — **risolto** con pdftotext + OVH Kepler, E2E verificato.
-2. **SMTP/Postfix**: mailer fallisce `ECONNREFUSED 172.17.0.1:25` — host non ha
-   SMTP e non esiste sidecar. Dominio ha MX Aruba (mx.nexusdigitalbridge.it).
-   Opzioni: (a) postfix container self-contained (deliverability a rischio:
-   IP OVH senza PTR/SPF→spam), (b) relay autenticato Aruba smtps.aruba.it:465
-   (serve casella + credenziali, deliverability buona), (c) deferire.
-   **Decisione bloccante da prendere col Capo.**
-3. Deploy: smoke E2E quasi completo su :8813; poi cutover nginx su :8812
-   (stop vecchio container Firebase, rename). Prima pulire dati di test.
-4. Fase 4 dati: decidere se recuperare export Firestore (serve service account).
-5. Fase 5: ChatMate + EmaMonitor + THREAT-MODEL/SLO/GDPR (CV minori).
+1. ~~Fix parsing AI~~ — **risolto** (pdftotext + Regolo glm5.2 + fallback Kepler).
+2. ~~SMTP~~ — **risolto**: postfix host attivo, subnet docker autorizzata, invio ok.
+   Resta caveat deliverability (IP OVH senza PTR/SPF → possibile spam; da
+   verificare con casella reale, eventuale Aruba relay dopo).
+3. **Migrazione dati Firestore**: script `scripts/migrate-firestore.js` pronto
+   (dry-run + apply, uid Firebase → id Postgres, password non migrabili → reset).
+   **Serve service account JSON** — non presente sul server, richiesto al Capo.
+4. Deploy: pulire dati di test, cutover nginx su :8812 (stop/rename vecchio
+   container Firebase), smoke E2E finale.
+5. Fase 5: ChatMate + EmaMonitor. THREAT-MODEL/SLO/GDPR bozze in `ops/`.
 
 ## Rischi aperti
 
