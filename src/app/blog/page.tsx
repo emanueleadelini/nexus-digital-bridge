@@ -1,105 +1,87 @@
-
 "use client";
 
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { Calendar, User, ArrowRight, Newspaper, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Calendar, ArrowRight, Newspaper, GraduationCap } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { useApiData } from "@/lib/api";
 
-export default function PublicBlogPage() {
-  const db = useFirestore();
-  
-  const blogRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "blogPosts"), orderBy("publishedAt", "desc"));
-  }, [db]);
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt?: string;
+  author: string;
+  publishedAt?: string;
+  coverImage?: string | null;
+}
 
-  const { data: posts, isLoading } = useCollection(blogRef);
+export default function BlogPage() {
+  const { data: posts, isLoading } = useApiData<BlogPost[]>("/api/blog", 60_000);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      
-      <main className="pb-20">
-        {/* Header */}
-        <header className="bg-primary pt-20 pb-32 text-white">
-          <div className="container mx-auto px-4 text-center space-y-6">
-            <div className="inline-flex items-center gap-2 bg-secondary/20 text-secondary px-4 py-2 rounded-full font-bold text-sm mb-4">
-              <Newspaper className="w-4 h-4" />
-              <span>Nexus Magazine</span>
+      <main className="flex-1 bg-slate-50 py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="bg-secondary p-2 rounded-xl">
+              <Newspaper className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-headline font-bold">News & Approfondimenti</h1>
-            <p className="text-xl text-blue-100 max-w-2xl mx-auto">
-              Resta aggiornato sulle ultime tendenze del PCTO, storie di successo e innovazioni nel matching scuola-lavoro.
-            </p>
+            <h1 className="text-4xl font-headline font-bold text-primary">Blog & News</h1>
           </div>
-        </header>
+          <p className="text-slate-500 mb-12 max-w-2xl">
+            Approfondimenti, aggiornamenti della piattaforma e storie di successo dal mondo Nexus Digital Bridge.
+          </p>
 
-        <div className="container mx-auto px-4 -mt-16">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {isLoading ? (
-              [1, 2, 3].map(i => (
-                <Card key={i} className="animate-pulse h-[400px] rounded-3xl" />
-              ))
-            ) : posts && posts.length > 0 ? (
-              posts.map((post) => (
-                <Link key={post.id} href={`/blog/${post.id}`} className="group">
-                  <Card className="border-none shadow-xl overflow-hidden h-full hover:shadow-2xl transition-all duration-500 bg-white rounded-3xl">
-                    <div className="relative h-56 overflow-hidden">
-                      <Image 
-                        src={post.imageUrl || "https://picsum.photos/seed/blog/800/600"} 
-                        alt={post.title} 
-                        fill 
-                        className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute top-4 left-4">
-                        <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold text-primary uppercase shadow-sm">
-                          {post.tags?.[0] || 'News'}
-                        </span>
-                      </div>
-                    </div>
-                    <CardContent className="p-8 space-y-4">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
+          {isLoading ? (
+            <div className="flex justify-center py-32">
+              <Loader2 className="w-12 h-12 text-primary animate-spin" />
+            </div>
+          ) : posts && posts.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {posts.map((post) => (
+                <Card key={post.id} className="border-none shadow-lg overflow-hidden flex flex-col hover:-translate-y-1 transition-transform">
+                  <div className="relative h-48">
+                    <Image
+                      src={post.coverImage || "https://picsum.photos/seed/blog/600/400"}
+                      alt={post.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-6 flex-1 flex flex-col">
+                    <div className="flex items-center gap-4 text-xs text-slate-400 mb-4">
+                      <span className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {post.publishedAt ? format(post.publishedAt.toDate(), "d MMM yyyy", { locale: it }) : "Bozza"}
-                      </div>
-                      <h3 className="text-2xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-2 leading-tight">
-                        {post.title}
-                      </h3>
-                      <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed">
-                        {post.excerpt}
-                      </p>
-                      <div className="pt-4 flex items-center gap-2 text-primary font-bold text-sm">
-                        Leggi di più <ArrowRight className="w-4 h-4 group-hover:translate-x-2 transition-transform" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))
-            ) : (
-              <div className="col-span-full py-20 text-center bg-white rounded-3xl shadow-xl">
-                <p className="text-slate-400">Nessun articolo disponibile al momento.</p>
-              </div>
-            )}
-          </div>
+                        {post.publishedAt ? format(new Date(post.publishedAt), "d MMM yyyy", { locale: it }) : "—"}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <User className="w-3 h-3" /> {post.author}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-bold text-slate-800 mb-3 line-clamp-2">{post.title}</h2>
+                    <p className="text-slate-500 text-sm mb-6 line-clamp-3 flex-1">{post.excerpt}</p>
+                    <Link href={`/blog/${post.id}`} className="text-primary font-bold text-sm flex items-center gap-2 hover:gap-3 transition-all">
+                      Leggi l'articolo <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-32 bg-white rounded-3xl border-2 border-dashed border-slate-200">
+              <Newspaper className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-slate-600">Nessun articolo pubblicato</h2>
+              <p className="text-slate-400">Torna presto per nuovi contenuti!</p>
+            </div>
+          )}
         </div>
       </main>
-
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <GraduationCap className="w-8 h-8 text-secondary" />
-            <span className="font-headline font-bold text-2xl">Nexus Digital Bridge</span>
-          </div>
-          <p className="text-slate-500 text-sm">© 2026 Nexus Digital Bridge. Tutti i diritti riservati.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

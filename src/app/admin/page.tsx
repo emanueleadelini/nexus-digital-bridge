@@ -5,51 +5,21 @@ import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe, TrendingUp, Users, MessageSquare, Newspaper, Layout, Building2, GraduationCap, Zap } from "lucide-react";
 import Link from "next/link";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where } from "firebase/firestore";
+import { useApiData } from "@/lib/api";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { useMemo } from "react";
 
-const weeklyData = [
-  { giorno: "Lun", aziende: 2, istituti: 1, chat: 3 },
-  { giorno: "Mar", aziende: 1, istituti: 3, chat: 5 },
-  { giorno: "Mer", aziende: 4, istituti: 2, chat: 8 },
-  { giorno: "Gio", aziende: 2, istituti: 4, chat: 6 },
-  { giorno: "Ven", aziende: 5, istituti: 2, chat: 11 },
-  { giorno: "Sab", aziende: 1, istituti: 1, chat: 4 },
-  { giorno: "Dom", aziende: 3, istituti: 2, chat: 7 },
-];
+interface AdminStats {
+  companies: number;
+  institutes: number;
+  students: number;
+  chats: number;
+  messages: number;
+  pendingUsers: number;
+}
 
 export default function AdminPanoramicaPage() {
-  const db = useFirestore();
-  const { user } = useUser();
-
-  const companiesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(collection(db, "companies"), where("isDemo", "!=", true));
-  }, [db, user]);
-
-  const institutesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return query(collection(db, "institutes"), where("isDemo", "!=", true));
-  }, [db, user]);
-
-  const chatsRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "chats");
-  }, [db, user]);
-
-  const { data: companies } = useCollection(companiesRef);
-  const { data: institutes } = useCollection(institutesRef);
-  const { data: chats } = useCollection(chatsRef);
-
-  const stats = useMemo(() => ({
-    companies: companies?.length || 0,
-    institutes: institutes?.length || 0,
-    chats: chats?.length || 0,
-    pendingCompanies: companies?.filter(c => c.status === "Pending").length || 0,
-    pendingInstitutes: institutes?.filter(i => i.status === "Pending").length || 0,
-  }), [companies, institutes, chats]);
+  const { data: stats } = useApiData<AdminStats>("/api/admin/stats", 30_000);
+  const { data: health } = useApiData<{ db?: string; ai?: string }>("/api/health", 60_000);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -66,36 +36,17 @@ export default function AdminPanoramicaPage() {
             </div>
           </div>
 
-          {/* Stat Cards reali */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatCard title="Aziende" value={stats.companies} sub={`${stats.pendingCompanies} in attesa`} icon={<Building2 className="w-5 h-5" />} color="text-blue-600 bg-blue-50" />
-            <StatCard title="Istituti" value={stats.institutes} sub={`${stats.pendingInstitutes} in attesa`} icon={<GraduationCap className="w-5 h-5" />} color="text-green-600 bg-green-50" />
-            <StatCard title="Conversazioni" value={stats.chats} sub="chat attive totali" icon={<MessageSquare className="w-5 h-5" />} color="text-orange-600 bg-orange-50" />
-            <StatCard title="Approvazioni" value={stats.pendingCompanies + stats.pendingInstitutes} sub="da gestire" icon={<Zap className="w-5 h-5" />} color="text-purple-600 bg-purple-50" />
+            <StatCard title="Aziende" value={stats?.companies ?? 0} sub="iscritte reali" icon={<Building2 className="w-5 h-5" />} color="text-blue-600 bg-blue-50" />
+            <StatCard title="Istituti" value={stats?.institutes ?? 0} sub="iscritti reali" icon={<GraduationCap className="w-5 h-5" />} color="text-green-600 bg-green-50" />
+            <StatCard title="CV Studenti" value={stats?.students ?? 0} sub="profili caricati" icon={<Users className="w-5 h-5" />} color="text-blue-600 bg-blue-50" />
+            <StatCard title="Approvazioni" value={stats?.pendingUsers ?? 0} sub="da gestire" icon={<Zap className="w-5 h-5" />} color="text-purple-600 bg-purple-50" />
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            <QuickActionCard
-              title="Gestione Utenti"
-              desc="Verifica profili e approvazioni"
-              href="/admin/users"
-              icon={<Users className="w-6 h-6" />}
-              color="bg-blue-500"
-            />
-            <QuickActionCard
-              title="Blog & News"
-              desc="Pubblica articoli e annunci"
-              href="/admin/blog"
-              icon={<Newspaper className="w-6 h-6" />}
-              color="bg-orange-500"
-            />
-            <QuickActionCard
-              title="Landing Page"
-              desc="Aggiorna testi e immagini"
-              href="/admin/content"
-              icon={<Layout className="w-6 h-6" />}
-              color="bg-purple-500"
-            />
+            <QuickActionCard title="Gestione Utenti" desc="Verifica profili e approvazioni" href="/admin/users" icon={<Users className="w-6 h-6" />} color="bg-blue-500" />
+            <QuickActionCard title="Blog & News" desc="Pubblica articoli e annunci" href="/admin/blog" icon={<Newspaper className="w-6 h-6" />} color="bg-orange-500" />
+            <QuickActionCard title="Landing Page" desc="Aggiorna testi e immagini" href="/admin/content" icon={<Layout className="w-6 h-6" />} color="bg-purple-500" />
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -103,30 +54,20 @@ export default function AdminPanoramicaPage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-500" />
-                  Andamento Settimanale
+                  Conversazioni
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={weeklyData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorAziende" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#1e40af" stopOpacity={0.15} />
-                        <stop offset="95%" stopColor="#1e40af" stopOpacity={0} />
-                      </linearGradient>
-                      <linearGradient id="colorChat" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.2} />
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis dataKey="giorno" tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: "#94a3b8" }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 40px rgba(0,0,0,0.1)" }} />
-                    <Area type="monotone" dataKey="aziende" name="Aziende" stroke="#1e40af" strokeWidth={2} fill="url(#colorAziende)" dot={false} />
-                    <Area type="monotone" dataKey="chat" name="Chat" stroke="#f97316" strokeWidth={2} fill="url(#colorChat)" dot={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <div className="flex items-end gap-8 py-8">
+                  <div className="text-center">
+                    <div className="text-5xl font-bold font-headline text-primary">{stats?.chats ?? 0}</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-widest mt-2">Chat attive</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-5xl font-bold font-headline text-secondary">{stats?.messages ?? 0}</div>
+                    <div className="text-xs text-slate-400 uppercase tracking-widest mt-2">Messaggi totali</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
@@ -137,7 +78,7 @@ export default function AdminPanoramicaPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center justify-between">
-                    <div className="text-4xl font-bold font-headline">{stats.chats}</div>
+                    <div className="text-4xl font-bold font-headline">{stats?.chats ?? 0}</div>
                     <MessageSquare className="w-12 h-12 text-secondary opacity-30" />
                   </div>
                   <p className="text-xs mt-4 text-blue-100">Conversazioni aziende ↔ istituti</p>
@@ -149,28 +90,25 @@ export default function AdminPanoramicaPage() {
                   <CardTitle className="text-sm font-bold">Stato Sistema</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-medium text-slate-600">Database Firestore: Online</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-medium text-slate-600">AI Gemini (CV Parser): Online</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <span className="text-xs font-medium text-slate-600">Email Service (Resend): Online</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                    <span className="text-xs font-medium text-slate-600">Auth Firebase: Online</span>
-                  </div>
+                  <StatusRow ok={health?.db === "ok"} label="Database PostgreSQL" />
+                  <StatusRow ok={health?.ai === "ok"} label="AI Parser (llama-swap)" />
+                  <StatusRow ok={true} label="Auth (Better Auth + Postgres)" />
+                  <StatusRow ok={true} label="Email (SMTP self-hosted)" />
                 </CardContent>
               </Card>
             </div>
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+function StatusRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`w-2 h-2 rounded-full ${ok ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+      <span className="text-xs font-medium text-slate-600">{label}: {ok ? "Online" : "Offline"}</span>
     </div>
   );
 }

@@ -6,76 +6,58 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { X, Briefcase, Building2, MapPin, Globe, Loader2, Check } from "lucide-react";
+import { Briefcase, Building2, MapPin, Loader2, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirestore, useUser, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, collection, updateDoc } from "firebase/firestore";
+import { useAuthGuard, useApiData, apiFetch } from "@/lib/api";
+
+interface Named { id: string; name: string }
 
 export default function ProfilePage() {
-  const db = useFirestore();
-  const { user } = useUser();
+  const { user, profile, isLoading } = useAuthGuard();
   const { toast } = useToast();
+  const role = (user?.role?.toLowerCase() as "company" | "institute") || "company";
 
-  const userRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, "users", user.uid);
-  }, [db, user]);
-
-  const { data: userProfile, isLoading: isUserLoading } = useDoc(userRef);
-  const role = (userProfile?.role?.toLowerCase() as "company" | "institute") || "company";
-
-  const profileDetailsRef = useMemoFirebase(() => {
-    if (!db || !user || !role) return null;
-    const path = role === "company" ? "companies" : "institutes";
-    return doc(db, path, user.uid);
-  }, [db, user, role]);
-
-  const { data: profileDetails } = useDoc(profileDetailsRef);
-
-  const sectorsRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, "sectors");
-  }, [db]);
-
-  const typesRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, "instituteTypes");
-  }, [db]);
-
-  const { data: availableSectors } = useCollection(sectorsRef);
-  const { data: availableTypes } = useCollection(typesRef);
+  const { data: availableSectors } = useApiData<Named[]>("/api/sectors");
+  const { data: availableTypes } = useApiData<Named[]>(role === "institute" ? "/api/institute-types" : null);
 
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [bio, setBio] = useState("");
+  const [vatNumber, setVatNumber] = useState("");
+  const [website, setWebsite] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (profileDetails) {
-      setSelectedSectors(profileDetails.sectorIds || []);
-      setSelectedTypes(profileDetails.types || []);
-      setAddress(profileDetails.address || "");
-      setBio(profileDetails.description || "");
+    if (profile) {
+      setSelectedSectors((profile.sectorIds as string[]) || []);
+      setSelectedTypes((profile.types as string[]) || []);
+      setAddress((profile.address as string) || "");
+      setBio((profile.description as string) || "");
+      setVatNumber((profile.vatNumber as string) || "");
+      setWebsite((profile.website as string) || "");
     }
-  }, [profileDetails]);
+  }, [profile]);
 
   const handleSave = async () => {
-    if (!profileDetailsRef || !userRef) return;
     setIsSaving(true);
     try {
-      await updateDoc(profileDetailsRef, {
-        sectorIds: selectedSectors,
-        address,
-        description: bio,
-        ...(role === 'institute' ? { types: selectedTypes } : {})
+      const res = await apiFetch("/api/profile", {
+        method: "PATCH",
+        json: {
+          sectorIds: selectedSectors,
+          address,
+          description: bio,
+          vatNumber,
+          website,
+          ...(role === "institute" ? { types: selectedTypes } : {}),
+        },
       });
+      if (!res.ok) throw new Error();
       toast({ title: "Profilo aggiornato", description: "Le modifiche sono state salvate correttamente." });
-    } catch (error) {
+    } catch {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiornare il profilo." });
     } finally {
       setIsSaving(false);
@@ -83,18 +65,18 @@ export default function ProfilePage() {
   };
 
   const toggleSector = (sector: string) => {
-    setSelectedSectors(prev => 
+    setSelectedSectors(prev =>
       prev.includes(sector) ? prev.filter(s => s !== sector) : [...prev, sector]
     );
   };
 
   const toggleType = (type: string) => {
-    setSelectedTypes(prev => 
+    setSelectedTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     );
   };
 
-  if (isUserLoading) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen bg-slate-50">
         <DashboardSidebar />
@@ -123,7 +105,7 @@ export default function ProfilePage() {
                 {role === 'company' ? <Briefcase className="w-8 h-8" /> : <Building2 className="w-8 h-8" />}
               </div>
               <div>
-                <CardTitle>{role === 'company' ? 'Dati di Visura' : 'Informazioni Generali'}</CardTitle>
+                <CardTitle>{role === 'company' ? 'Dati Aziendali' : 'Informazioni Generali'}</CardTitle>
                 <CardDescription>Gestisci i tuoi dati operativi</CardDescription>
               </div>
             </CardHeader>
@@ -131,7 +113,7 @@ export default function ProfilePage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nome {role === 'company' ? 'Azienda' : 'Istituto'}</Label>
-                  <Input id="name" defaultValue={profileDetails?.name} className="rounded-xl" readOnly />
+                  <Input id="name" defaultValue={(profile?.name as string) || ""} className="rounded-xl" readOnly />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Indirizzo</Label>
@@ -142,13 +124,26 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {role === 'company' && (
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="vat">Partita IVA</Label>
+                    <Input id="vat" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} className="rounded-xl" placeholder="IT01234567890" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Sito Web</Label>
+                    <Input id="website" value={website} onChange={(e) => setWebsite(e.target.value)} className="rounded-xl" placeholder="https://..." />
+                  </div>
+                </div>
+              )}
+
               {role === 'institute' && (
                 <div className="space-y-4">
                   <Label className="text-lg font-bold text-primary">Tipologie di Istituto</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {availableTypes?.map(type => (
-                      <div 
-                        key={type.id} 
+                      <div
+                        key={type.id}
                         onClick={() => toggleType(type.name)}
                         className={`flex items-center gap-2 p-3 rounded-xl border text-xs cursor-pointer transition-all ${selectedTypes.includes(type.name) ? 'bg-secondary/10 border-secondary text-secondary font-bold' : 'bg-white hover:bg-slate-50'}`}
                       >
@@ -165,14 +160,14 @@ export default function ProfilePage() {
               <div className="space-y-4">
                 <Label className="text-lg font-bold text-primary">Settori Merceologici</Label>
                 <p className="text-sm text-slate-500">
-                  {role === 'company' 
-                    ? "Seleziona i settori in cui operi. Gli studenti con questi tag appariranno nei tuoi match." 
+                  {role === 'company'
+                    ? "Seleziona i settori in cui operi. Gli studenti con questi tag appariranno nei tuoi match."
                     : "I settori che definiscono l'orientamento formativo dell'istituto."}
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {availableSectors?.map(sector => (
-                    <div 
-                      key={sector.id} 
+                    <div
+                      key={sector.id}
                       onClick={() => toggleSector(sector.name)}
                       className={`flex items-center gap-2 p-2 rounded-xl border text-[10px] cursor-pointer transition-all ${selectedSectors.includes(sector.name) ? 'bg-primary/10 border-primary text-primary font-bold' : 'bg-white hover:bg-slate-50'}`}
                     >

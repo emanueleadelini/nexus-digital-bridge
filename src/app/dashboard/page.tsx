@@ -4,72 +4,55 @@ import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap, Users, MessageSquare, TrendingUp, Bell, Building2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuthGuard } from "@/hooks/use-auth-guard";
-import { useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc } from "firebase/firestore";
+import { useAuthGuard, useApiData, apiFetch } from "@/lib/api";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import type { CompanyProfile, InstituteProfile } from "@/types";
+import type { Chat, AppNotification, StudentCV } from "@/types";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 export default function DashboardOverview() {
-  const { user, userProfile, isLoading } = useAuthGuard();
-  const db = useFirestore();
+  const { user, profile, isLoading } = useAuthGuard();
 
-  const role = userProfile?.role?.toLowerCase() as "company" | "institute" | undefined;
+  const role = user?.role?.toLowerCase() as "company" | "institute" | undefined;
+  const sectorIds: string[] = (profile?.sectorIds as string[] | undefined) || [];
 
-  // Profilo dettagliato (companies o institutes) per leggere sectorIds
-  const profileRef = useMemoFirebase(() => {
-    if (!db || !user || !userProfile) return null;
-    const path = userProfile.role === "Company" ? "companies" : "institutes";
-    return doc(db, path, user.uid);
-  }, [db, user, userProfile]);
+  const { data: myChats } = useApiData<Chat[]>(user ? "/api/chats" : null);
+  const { data: notifications, refetch: refetchNotifs } = useApiData<AppNotification[]>(
+    user ? "/api/notifications" : null,
+    15_000
+  );
+  const { data: myStudents } = useApiData<StudentCV[]>(
+    user?.role === "Institute" ? "/api/students" : null
+  );
 
-  const { data: profileDetails } = useDoc<CompanyProfile | InstituteProfile>(profileRef);
-  const sectorIds: string[] = profileDetails?.sectorIds || [];
-
-  // Chat dell'utente corrente
-  const chatsRef = useMemoFirebase(() => {
-    if (!db || !user || !userProfile) return null;
-    const field = userProfile.role === "Company" ? "companyId" : "instituteId";
-    return query(collection(db, "chats"), where(field, "==", user.uid));
-  }, [db, user, userProfile]);
-
-  const { data: myChats } = useCollection(chatsRef);
-
-  // Studenti dell'istituto (solo Institute)
-  const studentsRef = useMemoFirebase(() => {
-    if (!db || !user || userProfile?.role !== "Institute") return null;
-    return collection(db, "institutes", user.uid, "studentCVs");
-  }, [db, user, userProfile]);
-
-  const { data: myStudents } = useCollection(studentsRef);
-
-  // Statistiche reali
   const chatsCount = myChats?.length || 0;
-  const totalMessages = myChats?.reduce((acc, chat) => acc + (chat.messages?.length || 0), 0) || 0;
   const studentsCount = myStudents?.length || 0;
+  const unread = notifications?.filter((n) => !n.readAt) || [];
 
-  // Ultime 3 chat per attività recenti
-  const recentChats = [...(myChats || [])]
-    .sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0))
-    .slice(0, 3);
+  const recentChats = (myChats || []).slice(0, 3);
 
-  // Welcome card — hooks PRIMA di qualsiasi return condizionale (Rules of Hooks)
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   useEffect(() => {
-    if (userProfile?.status === "Approved") {
+    if (user?.status === "Approved") {
       const dismissed = localStorage.getItem("onboarding_dismissed");
-      if (dismissed !== "true") {
-        setShowWelcome(true);
-      }
+      if (dismissed !== "true") setShowWelcome(true);
     }
-  }, [userProfile]);
+  }, [user]);
 
   function handleDismissWelcome() {
     localStorage.setItem("onboarding_dismissed", "true");
     setShowWelcome(false);
+  }
+
+  async function openNotifs() {
+    setShowNotifs((v) => !v);
+    if (!showNotifs && unread.length > 0) {
+      await apiFetch("/api/notifications", { method: "POST" });
+      refetchNotifs(true);
+    }
   }
 
   if (isLoading) {
@@ -83,10 +66,6 @@ export default function DashboardOverview() {
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="h-32 bg-slate-200 rounded-2xl" />
               ))}
-            </div>
-            <div className="grid lg:grid-cols-2 gap-8">
-              <div className="h-64 bg-slate-200 rounded-2xl" />
-              <div className="h-64 bg-slate-200 rounded-2xl" />
             </div>
           </div>
         </main>
@@ -103,11 +82,7 @@ export default function DashboardOverview() {
           {showWelcome && (
             <div className="relative bg-gradient-to-r from-primary to-blue-600 rounded-3xl p-8 text-white shadow-xl overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-              <button
-                onClick={handleDismissWelcome}
-                className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
-                aria-label="Chiudi benvenuto"
-              >
+              <button onClick={handleDismissWelcome} className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors" aria-label="Chiudi benvenuto">
                 <X className="w-5 h-5" />
               </button>
               <div className="relative z-10 space-y-4">
@@ -115,20 +90,10 @@ export default function DashboardOverview() {
                 <p className="text-blue-100 text-sm">Segui questi passi per iniziare al meglio:</p>
                 <div className="grid sm:grid-cols-3 gap-4">
                   {(role === "company"
-                    ? [
-                        "1. Completa il profilo azienda",
-                        "2. Esplora i Match",
-                        "3. Contatta un Istituto",
-                      ]
-                    : [
-                        "1. Completa il profilo istituto",
-                        "2. Carica i CV degli studenti",
-                        "3. Aspetta le aziende interessate",
-                      ]
+                    ? ["1. Completa il profilo azienda", "2. Esplora i Match", "3. Contatta un Istituto"]
+                    : ["1. Completa il profilo istituto", "2. Carica i CV degli studenti", "3. Aspetta le aziende interessate"]
                   ).map((step, i) => (
-                    <div key={i} className="bg-white/10 rounded-2xl px-4 py-3 text-sm font-medium">
-                      {step}
-                    </div>
+                    <div key={i} className="bg-white/10 rounded-2xl px-4 py-3 text-sm font-medium">{step}</div>
                   ))}
                 </div>
               </div>
@@ -140,15 +105,37 @@ export default function DashboardOverview() {
               <h1 className="text-3xl font-headline font-bold text-primary">Panoramica Dashboard</h1>
               <p className="text-slate-500">
                 Benvenuto su Nexus Digital Bridge.{" "}
-                {role === "company"
-                  ? "Ecco un riassunto delle tue attività."
-                  : "Ecco lo stato dei tuoi studenti e match."}
+                {role === "company" ? "Ecco un riassunto delle tue attività." : "Ecco lo stato dei tuoi studenti e match."}
               </p>
             </div>
-            <Button variant="outline" className="rounded-xl border-slate-200 bg-white gap-2 shadow-sm">
-              <Bell className="w-4 h-4 text-primary" />
-              Notifiche
-            </Button>
+            <div className="relative">
+              <Button variant="outline" onClick={openNotifs} className="rounded-xl border-slate-200 bg-white gap-2 shadow-sm relative">
+                <Bell className="w-4 h-4 text-primary" />
+                Notifiche
+                {unread.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unread.length}
+                  </span>
+                )}
+              </Button>
+              {showNotifs && (
+                <div className="absolute right-0 mt-2 w-96 max-h-96 overflow-auto bg-white border rounded-2xl shadow-2xl z-50 p-2">
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 10).map((n) => (
+                      <Link key={n.id} href={n.link || "#"} className="block p-3 rounded-xl hover:bg-slate-50">
+                        <div className="text-sm font-bold text-primary">{n.title}</div>
+                        <div className="text-xs text-slate-500">{n.body}</div>
+                        <div className="text-[10px] text-slate-400 mt-1">
+                          {n.createdAt ? format(new Date(n.createdAt), "d MMM, HH:mm", { locale: it }) : ""}
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-400 text-center py-6">Nessuna notifica</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid md:grid-cols-4 gap-6">
@@ -160,7 +147,7 @@ export default function DashboardOverview() {
             />
             <StatCard
               title={role === "company" ? "Messaggi Scambiati" : "Studenti Registrati"}
-              value={role === "company" ? totalMessages : studentsCount}
+              value={role === "company" ? myChats?.reduce((a, c) => a + (c.messageCount || 0), 0) || 0 : studentsCount}
               icon={<Users className="w-6 h-6" />}
               color="text-blue-600 bg-blue-50"
             />
@@ -172,7 +159,7 @@ export default function DashboardOverview() {
             />
             <StatCard
               title={role === "company" ? "Match Trovati" : "Match Attivi"}
-              value={chatsCount > 0 ? `${chatsCount * 3}+` : "—"}
+              value={role === "company" ? chatsCount : studentsCount > 0 ? studentsCount : "—"}
               icon={<Zap className="w-6 h-6" />}
               color="text-purple-600 bg-purple-50"
             />
@@ -186,43 +173,30 @@ export default function DashboardOverview() {
               <CardContent>
                 <div className="space-y-6">
                   {recentChats.length > 0 ? (
-                    recentChats.map((chat) => {
-                      const lastMsg = chat.messages?.[chat.messages.length - 1] ?? "";
-                      const displayMsg = lastMsg.includes(": ")
-                        ? lastMsg.split(": ").slice(1).join(": ")
-                        : lastMsg;
-                      return (
-                        <div
-                          key={chat.id}
-                          className="flex gap-4 items-start border-b border-slate-50 pb-4 last:border-0 last:pb-0"
-                        >
-                          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                            {role === "company" ? (
-                              <Zap className="w-5 h-5 text-primary" />
-                            ) : (
-                              <Building2 className="w-5 h-5 text-secondary" />
-                            )}
+                    recentChats.map((chat) => (
+                      <Link key={chat.id} href="/dashboard/chat" className="flex gap-4 items-start border-b border-slate-50 pb-4 last:border-0 last:pb-0">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                          {role === "company" ? (
+                            <Zap className="w-5 h-5 text-primary" />
+                          ) : (
+                            <Building2 className="w-5 h-5 text-secondary" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="text-sm font-bold">
+                            {role === "company" ? chat.instituteName || "Istituto partner" : chat.companyName || "Azienda interessata"}
                           </div>
-                          <div className="flex-1 space-y-1">
-                            <div className="text-sm font-bold">
-                              {role === "company" ? "Istituto partner" : "Azienda interessata"}
-                            </div>
-                            <p className="text-xs text-slate-500 truncate">
-                              {displayMsg || "Conversazione avviata"}
-                            </p>
-                            <div className="text-[10px] text-slate-400">
-                              {chat.updatedAt
-                                ? format(
-                                    new Date(chat.updatedAt.seconds * 1000),
-                                    "d MMM, HH:mm",
-                                    { locale: it }
-                                  )
-                                : "..."}
-                            </div>
+                          <p className="text-xs text-slate-500 truncate">
+                            {chat.lastMessage || "Conversazione avviata"}
+                          </p>
+                          <div className="text-[10px] text-slate-400">
+                            {chat.lastMessageAt
+                              ? format(new Date(chat.lastMessageAt), "d MMM, HH:mm", { locale: it })
+                              : "..."}
                           </div>
                         </div>
-                      );
-                    })
+                      </Link>
+                    ))
                   ) : (
                     <p className="text-sm text-slate-400 text-center py-4">
                       Nessuna conversazione ancora. Inizia a esplorare i match!

@@ -10,20 +10,21 @@ import { KeyRound, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useFirebase } from "@/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { authClient } from "@/lib/auth-client";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { auth } = useFirebase();
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email);
+      await authClient.requestPasswordReset({
+        email,
+        redirectTo: "/reset-password",
+      });
     } catch {
       // Errore non mostrato per non rivelare se l'email è registrata
     } finally {
@@ -52,14 +53,14 @@ export default function ForgotPasswordPage() {
             <form onSubmit={handleReset} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="email">Email dell'Account</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="email@esempio.it" 
-                  required 
-                  className="rounded-xl" 
+                  placeholder="email@esempio.it"
+                  required
+                  className="rounded-xl"
                 />
               </div>
 

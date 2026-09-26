@@ -5,39 +5,16 @@ import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { Card } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MessageSquare, Building2, GraduationCap, ArrowRight, Loader2 } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection } from "firebase/firestore";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useApiData } from "@/lib/api";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
+import type { Chat } from "@/types";
 
 export default function AdminChatsPage() {
-  const db = useFirestore();
-  const { user, isUserLoading: authLoading } = useUser();
-
-  const chatsRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "chats");
-  }, [db, user]);
-
-  const companiesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "companies");
-  }, [db, user]);
-
-  const institutesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "institutes");
-  }, [db, user]);
-
-  const { data: chats, isLoading: collectionLoading } = useCollection(chatsRef);
-  const { data: companies } = useCollection(companiesRef);
-  const { data: institutes } = useCollection(institutesRef);
-
-  const companyNameById = Object.fromEntries((companies || []).map(c => [c.id, c.name]));
-  const instituteNameById = Object.fromEntries((institutes || []).map(i => [i.id, i.name]));
-
-  const isLoading = authLoading || (!!user && collectionLoading);
+  const { data: chats, isLoading } = useApiData<Chat[]>("/api/admin/chats", 15_000);
 
   if (isLoading) {
     return (
@@ -58,7 +35,7 @@ export default function AdminChatsPage() {
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <h1 className="text-3xl font-headline font-bold text-primary">Chat Globali</h1>
-              <p className="text-slate-500">Monitora le conversazioni attive tra Aziende e Istituti.</p>
+              <p className="text-slate-500">Monitora le conversazioni attive tra Aziende e Istituti (sola lettura).</p>
             </div>
             <div className="bg-secondary text-white p-3 rounded-2xl">
               <MessageSquare className="w-8 h-8" />
@@ -72,6 +49,7 @@ export default function AdminChatsPage() {
                   <TableHead>Azienda</TableHead>
                   <TableHead>Istituto</TableHead>
                   <TableHead>Ultimo Messaggio</TableHead>
+                  <TableHead>Messaggi</TableHead>
                   <TableHead className="text-right">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
@@ -82,23 +60,27 @@ export default function AdminChatsPage() {
                       <TableCell>
                         <div className="flex items-center gap-2 font-bold text-slate-700">
                           <Building2 className="w-4 h-4 text-primary" />
-                          <span className="truncate max-w-[150px]">
-                            {companyNameById[chat.companyId] || chat.companyId}
-                          </span>
+                          <span className="truncate max-w-[150px]">{chat.companyName}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 font-bold text-slate-700">
                           <GraduationCap className="w-4 h-4 text-secondary" />
-                          <span className="truncate max-w-[150px]">
-                            {instituteNameById[chat.instituteId] || chat.instituteId}
-                          </span>
+                          <span className="truncate max-w-[150px]">{chat.instituteName}</span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-slate-500 truncate block max-w-[200px]">
                           {chat.lastMessage || "—"}
                         </span>
+                        {chat.lastMessageAt && (
+                          <span className="text-[10px] text-slate-400">
+                            {format(new Date(chat.lastMessageAt), "d MMM HH:mm", { locale: it })}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="bg-blue-50 text-primary border-none">{chat.messageCount}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" className="gap-2 text-primary font-bold" asChild>
@@ -111,7 +93,7 @@ export default function AdminChatsPage() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-12 text-slate-400">
+                    <TableCell colSpan={5} className="text-center py-12 text-slate-400">
                       Nessuna chat attiva al momento.
                     </TableCell>
                   </TableRow>

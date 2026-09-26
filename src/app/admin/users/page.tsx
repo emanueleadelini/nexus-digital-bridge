@@ -1,17 +1,16 @@
 "use client";
 
 import { DashboardSidebar } from "@/components/dashboard/Sidebar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  Building2, 
-  Search, 
-  Mail, 
-  MapPin, 
+import {
+  Users,
+  Building2,
+  Search,
+  MapPin,
   ExternalLink,
   MoreVertical,
   CheckCircle,
@@ -19,81 +18,58 @@ import {
   Clock,
   Loader2
 } from "lucide-react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { sendApprovalEmail, sendRejectionEmail } from "@/app/actions/notifications";
+import { useApiData, apiFetch } from "@/lib/api";
+import type { UserProfile, CompanyProfile, InstituteProfile } from "@/types";
+
+type UserWithProfile = UserProfile & { profile: (CompanyProfile | InstituteProfile) | null };
 
 export default function AdminUsersPage() {
-  const db = useFirestore();
-  const { user } = useUser();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const companiesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "companies");
-  }, [db, user]);
-  
-  const institutesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "institutes");
-  }, [db, user]);
+  const { data: users, isLoading, refetch } = useApiData<UserWithProfile[]>("/api/admin/users", 30_000);
 
-  const { data: companies, isLoading: loadingCompanies } = useCollection(companiesRef);
-  const { data: institutes, isLoading: loadingInstitutes } = useCollection(institutesRef);
+  const companies = (users || []).filter(u => u.role === "Company");
+  const institutes = (users || []).filter(u => u.role === "Institute");
 
-  const handleUpdateStatus = async (userId: string, role: string, status: 'Approved' | 'Rejected') => {
-    if (!db) return;
+  const handleUpdateStatus = async (userId: string, status: 'Approved' | 'Rejected') => {
     setUpdatingId(userId);
-    try {
-      const collectionPath = role === 'Company' ? 'companies' : 'institutes';
-      
-      // Aggiorna documento nel profilo specifico
-      await updateDoc(doc(db, collectionPath, userId), { status });
-      
-      // Aggiorna documento utente principale
-      await updateDoc(doc(db, "users", userId), { status });
-
-      // Recupera dati utente per l'invio dell'email
-      const userDoc = await getDoc(doc(db, "users", userId));
-      const userData = userDoc.data();
-
-      // Invia email di notifica appropriata
-      if (userData?.email) {
-        const userName = userData.firstName || 'Utente';
-        if (status === 'Approved') {
-          sendApprovalEmail(userData.email, userName).catch(() => {});
-        } else if (status === 'Rejected') {
-          sendRejectionEmail(userData.email, userName).catch(() => {});
-        }
-      }
-
+    const res = await apiFetch(`/api/admin/users/${userId}`, { method: "PATCH", json: { status } });
+    setUpdatingId(null);
+    if (res.ok) {
       toast({
         title: status === 'Approved' ? "Utente Approvato" : "Utente Rifiutato",
-        description: `Lo stato dell'utente è stato aggiornato con successo.`,
+        description: "Lo stato dell'utente è stato aggiornato. Email inviata.",
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Errore",
-        description: "Impossibile aggiornare lo stato dell'utente.",
-      });
-    } finally {
-      setUpdatingId(null);
+      refetch(true);
+    } else {
+      toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiornare lo stato dell'utente." });
     }
   };
 
-  const filteredCompanies = companies?.filter(c => 
-    c.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCompanies = companies.filter(c =>
+    c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.profile as CompanyProfile | null)?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  const filteredInstitutes = institutes.filter(i =>
+    i.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (i.profile as InstituteProfile | null)?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredInstitutes = institutes?.filter(i => 
-    i.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen bg-slate-50">
+        <DashboardSidebar />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -114,9 +90,9 @@ export default function AdminUsersPage() {
             <CardHeader className="pb-0">
               <div className="relative max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input 
-                  placeholder="Cerca per nome..." 
-                  className="pl-10 rounded-xl" 
+                <Input
+                  placeholder="Cerca per nome..."
+                  className="pl-10 rounded-xl"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -127,19 +103,19 @@ export default function AdminUsersPage() {
                 <TabsList className="bg-slate-100 p-1 rounded-xl">
                   <TabsTrigger value="companies" className="rounded-lg gap-2">
                     <Building2 className="w-4 h-4" /> Aziende
-                    {companies?.filter(c => c.status === 'Pending').length ? (
+                    {companies.filter(c => c.status === 'Pending').length > 0 && (
                       <span className="ml-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {companies.filter(c => c.status === 'Pending').length}
                       </span>
-                    ) : null}
+                    )}
                   </TabsTrigger>
                   <TabsTrigger value="institutes" className="rounded-lg gap-2">
                     <Users className="w-4 h-4" /> Istituti
-                    {institutes?.filter(i => i.status === 'Pending').length ? (
+                    {institutes.filter(i => i.status === 'Pending').length > 0 && (
                       <span className="ml-1 bg-orange-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
                         {institutes.filter(i => i.status === 'Pending').length}
                       </span>
-                    ) : null}
+                    )}
                   </TabsTrigger>
                 </TabsList>
 
@@ -155,59 +131,57 @@ export default function AdminUsersPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredCompanies?.length ? filteredCompanies.map((company) => (
-                          <TableRow key={company.id}>
-                            <TableCell className="font-bold text-slate-700">
-                              <div className="flex flex-col">
-                                {company.name}
-                                <span className="text-[10px] text-slate-400 font-normal">P.IVA: {company.vatNumber}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                               <StatusBadge status={company.status} />
-                            </TableCell>
-                            <TableCell>
-                              <div className="space-y-1">
-                                <div className="text-xs text-slate-500 flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" /> {company.address}
+                        {filteredCompanies.length ? filteredCompanies.map((company) => {
+                          const p = company.profile as CompanyProfile | null;
+                          return (
+                            <TableRow key={company.id}>
+                              <TableCell className="font-bold text-slate-700">
+                                <div className="flex flex-col">
+                                  {p?.name || company.name}
+                                  <span className="text-[10px] text-slate-400 font-normal">P.IVA: {p?.vatNumber || "—"} · {company.email}</span>
                                 </div>
-                                <div className="text-xs text-primary flex items-center gap-1 font-medium">
-                                  <ExternalLink className="w-3 h-3" /> {company.website}
+                              </TableCell>
+                              <TableCell><StatusBadge status={company.status} /></TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  <div className="text-xs text-slate-500 flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" /> {p?.address || "—"}
+                                  </div>
+                                  <div className="text-xs text-primary flex items-center gap-1 font-medium">
+                                    <ExternalLink className="w-3 h-3" /> {p?.website || "—"}
+                                  </div>
                                 </div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                {company.status !== 'Approved' && (
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-8"
-                                    disabled={updatingId === company.id}
-                                    onClick={() => handleUpdateStatus(company.id, 'Company', 'Approved')}
-                                  >
-                                    {updatingId === company.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
-                                    Approva
-                                  </Button>
-                                )}
-                                {company.status === 'Pending' && (
-                                  <Button 
-                                    variant="outline"
-                                    size="sm" 
-                                    className="text-destructive border-destructive/20 hover:bg-red-50 rounded-lg h-8"
-                                    disabled={updatingId === company.id}
-                                    onClick={() => handleUpdateStatus(company.id, 'Company', 'Rejected')}
-                                  >
-                                    <XCircle className="w-4 h-4 mr-1" />
-                                    Rifiuta
-                                  </Button>
-                                )}
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="w-4 h-4 text-slate-400" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )) : (
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  {company.status !== 'Approved' && (
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-8"
+                                      disabled={updatingId === company.id}
+                                      onClick={() => handleUpdateStatus(company.id, 'Approved')}
+                                    >
+                                      {updatingId === company.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+                                      Approva
+                                    </Button>
+                                  )}
+                                  {company.status === 'Pending' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-destructive border-destructive/20 hover:bg-red-50 rounded-lg h-8"
+                                      disabled={updatingId === company.id}
+                                      onClick={() => handleUpdateStatus(company.id, 'Rejected')}
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Rifiuta
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }) : (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center py-8 text-slate-400">Nessuna azienda trovata.</TableCell>
                           </TableRow>
@@ -229,47 +203,50 @@ export default function AdminUsersPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {filteredInstitutes?.length ? filteredInstitutes.map((inst) => (
-                          <TableRow key={inst.id}>
-                            <TableCell className="font-bold text-slate-700">{inst.name}</TableCell>
-                            <TableCell>
-                               <StatusBadge status={inst.status} />
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-[10px] uppercase">{inst.types?.join(", ")}</Badge>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                {inst.status !== 'Approved' && (
-                                  <Button 
-                                    size="sm" 
-                                    className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-8"
-                                    disabled={updatingId === inst.id}
-                                    onClick={() => handleUpdateStatus(inst.id, 'Institute', 'Approved')}
-                                  >
-                                    {updatingId === inst.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
-                                    Approva
-                                  </Button>
-                                )}
-                                {inst.status === 'Pending' && (
-                                  <Button 
-                                    variant="outline"
-                                    size="sm" 
-                                    className="text-destructive border-destructive/20 hover:bg-red-50 rounded-lg h-8"
-                                    disabled={updatingId === inst.id}
-                                    onClick={() => handleUpdateStatus(inst.id, 'Institute', 'Rejected')}
-                                  >
-                                    <XCircle className="w-4 h-4 mr-1" />
-                                    Rifiuta
-                                  </Button>
-                                )}
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="w-4 h-4 text-slate-400" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )) : (
+                        {filteredInstitutes.length ? filteredInstitutes.map((inst) => {
+                          const p = inst.profile as InstituteProfile | null;
+                          return (
+                            <TableRow key={inst.id}>
+                              <TableCell className="font-bold text-slate-700">
+                                <div className="flex flex-col">
+                                  {p?.name || inst.name}
+                                  <span className="text-[10px] text-slate-400 font-normal">{inst.email}</span>
+                                </div>
+                              </TableCell>
+                              <TableCell><StatusBadge status={inst.status} /></TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] uppercase">{p?.types?.join(", ") || "—"}</Badge>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  {inst.status !== 'Approved' && (
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700 text-white rounded-lg h-8"
+                                      disabled={updatingId === inst.id}
+                                      onClick={() => handleUpdateStatus(inst.id, 'Approved')}
+                                    >
+                                      {updatingId === inst.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+                                      Approva
+                                    </Button>
+                                  )}
+                                  {inst.status === 'Pending' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-destructive border-destructive/20 hover:bg-red-50 rounded-lg h-8"
+                                      disabled={updatingId === inst.id}
+                                      onClick={() => handleUpdateStatus(inst.id, 'Rejected')}
+                                    >
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      Rifiuta
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }) : (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center py-8 text-slate-400">Nessun istituto trovato.</TableCell>
                           </TableRow>

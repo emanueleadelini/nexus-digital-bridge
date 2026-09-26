@@ -4,30 +4,18 @@ import { DashboardSidebar } from "@/components/dashboard/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, Phone, Loader2, MessageSquarePlus } from "lucide-react";
-import { useState, useEffect, useRef, Suspense } from "react";
-import { useFirestore, useUser, useCollection, useMemoFirebase, useDoc } from "@/firebase";
-import {
-  collection,
-  doc,
-  updateDoc,
-  addDoc,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  serverTimestamp,
-} from "firebase/firestore";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Send, Loader2, MessageSquarePlus } from "lucide-react";
+import { useState, useEffect, useRef, Suspense, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import type { ChatMessage, UserRole } from "@/types";
+import type { ChatMessage, Chat } from "@/types";
+import { useAuthGuard, useApiData, apiFetch } from "@/lib/api";
 
 function ChatContent() {
-  const db = useFirestore();
-  const { user } = useUser();
+  const { user } = useAuthGuard();
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
@@ -36,68 +24,50 @@ function ChatContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isCreatingChat, setIsCreatingChat] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastMsgCount = useRef(0);
 
-  const companiesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "companies");
-  }, [db, user]);
+  const role = user?.role;
 
-  const institutesRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "institutes");
-  }, [db, user]);
-
-  const { data: companies } = useCollection(companiesRef);
-  const { data: institutes } = useCollection(institutesRef);
-
-  const companyNameById = Object.fromEntries((companies || []).map(c => [c.id, c.name as string]));
-  const instituteNameById = Object.fromEntries((institutes || []).map(i => [i.id, i.name as string]));
+  const { data: myChats, isLoading, refetch: refetchChats } = useApiData<Chat[]>(
+    user ? "/api/chats" : null,
+    5_000 // polling: sostituisce il listener Firestore
+  );
 
   const targetInstituteId = searchParams.get("institute");
   const targetStudentId = searchParams.get("student");
   const chatIdFromUrl = searchParams.get("chatId");
 
-  // Profilo utente per determinare il ruolo
-  const userProfileRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, "users", user.uid);
-  }, [db, user]);
-
-  const { data: userProfile } = useDoc(userProfileRef);
-  const role = userProfile?.role as UserRole | undefined;
-
-  // Lista chat filtrata per ruolo (query obbligatoria per sicurezza)
-  const chatsRef = useMemoFirebase(() => {
-    if (!db || !user || !role) return null;
-    if (role === "Admin") return collection(db, "chats");
-    const field = role === "Company" ? "companyId" : "instituteId";
-    return query(collection(db, "chats"), where(field, "==", user.uid));
-  }, [db, user, role]);
-
-  const { data: myChats, isLoading } = useCollection(chatsRef);
-
-  // Real-time listener sui messaggi della chat attiva (subcollection)
-  useEffect(() => {
-    if (!db || !activeChatId) {
+  // Poll messaggi della chat attiva
+  const loadMessages = useCallback(async (silent = true) => {
+    if (!activeChatId) {
       setMessages([]);
       return;
     }
-    const messagesRef = collection(db, "chats", activeChatId, "messages");
-    const q = query(messagesRef, orderBy("createdAt", "asc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMessages(snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as ChatMessage)));
-    });
-    return () => unsubscribe();
-  }, [db, activeChatId]);
+    try {
+      const res = await fetch(`/api/chats/${activeChatId}/messages`, { credentials: "include" });
+      if (res.ok) {
+        const data: ChatMessage[] = await res.json();
+        setMessages((prev) => (data.length !== prev.length || data.at(-1)?.id !== prev.at(-1)?.id ? data : prev));
+      }
+    } catch { /* polling tollerante */ }
+  }, [activeChatId]);
 
-  // Scroll automatico quando arrivano nuovi messaggi
   useEffect(() => {
-    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    loadMessages(false);
+    const t = setInterval(() => loadMessages(true), 3_000);
+    return () => clearInterval(t);
+  }, [loadMessages]);
+
+  useEffect(() => {
+    if (messages.length > lastMsgCount.current) {
+      scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    lastMsgCount.current = messages.length;
   }, [messages]);
 
   // Selezione automatica / creazione chat da URL params
   useEffect(() => {
-    if (isLoading || !myChats) return;
+    if (isLoading || !myChats || !role) return;
 
     if (chatIdFromUrl) {
       setActiveChatId(chatIdFromUrl);
@@ -114,59 +84,49 @@ function ChatContent() {
     } else if (myChats.length > 0 && !activeChatId && !targetInstituteId) {
       setActiveChatId(myChats[0].id);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myChats, isLoading, targetInstituteId, targetStudentId, chatIdFromUrl, role]);
 
   const handleCreateNewChat = async (instId: string, studentId: string | null) => {
-    if (!db || !user) return;
     setIsCreatingChat(true);
-    try {
-      const newChatRef = await addDoc(collection(db, "chats"), {
-        companyId: user.uid,
-        instituteId: instId,
-        studentCVId: studentId || null,
-        lastMessage: "Conversazione avviata.",
-        lastMessageTime: serverTimestamp(),
-        lastSenderId: user.uid,
-        createdAt: serverTimestamp(),
-      });
-      setActiveChatId(newChatRef.id);
+    const res = await apiFetch("/api/chats", {
+      json: { instituteId: instId, studentCvId: studentId || undefined },
+    });
+    if (res.ok) {
+      const chat = res.data as Chat;
+      setActiveChatId(chat.id);
       toast({ title: "Chat avviata", description: "Ora puoi dialogare con l'istituto." });
-    } catch {
-      toast({ variant: "destructive", title: "Errore", description: "Impossibile avviare la chat." });
-    } finally {
-      setIsCreatingChat(false);
+      refetchChats(true);
+    } else {
+      toast({ variant: "destructive", title: "Errore", description: (res.data as { error?: string }).error || "Impossibile avviare la chat." });
     }
+    setIsCreatingChat(false);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !activeChatId || !db || !user || !role) return;
-
     const text = newMessage.trim();
+    if (!text || !activeChatId || !user) return;
     setNewMessage("");
 
-    try {
-      await addDoc(collection(db, "chats", activeChatId, "messages"), {
-        senderId: user.uid,
-        senderEmail: user.email ?? "",
-        senderRole: role,
-        text,
-        createdAt: serverTimestamp(),
-      });
-
-      await updateDoc(doc(db, "chats", activeChatId), {
-        lastMessage: text,
-        lastMessageTime: serverTimestamp(),
-        lastSenderId: user.uid,
-      });
-    } catch {
+    const res = await apiFetch(`/api/chats/${activeChatId}/messages`, { json: { text } });
+    if (!res.ok) {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile inviare il messaggio." });
       setNewMessage(text);
+    } else {
+      loadMessages(true);
+      refetchChats(true);
     }
   };
 
   const activeChat = myChats?.find((c) => c.id === activeChatId);
+
+  const chatLabel = (chat: Chat) =>
+    role === "Company"
+      ? chat.instituteName || "Istituto Partner"
+      : role === "Institute"
+      ? chat.companyName || "Azienda Interessata"
+      : `${chat.companyName || "?"} ↔ ${chat.instituteName || "?"}`;
 
   if (isLoading || !role) {
     return (
@@ -180,7 +140,6 @@ function ChatContent() {
     <main className="flex-1 flex flex-col h-screen overflow-hidden">
       <div className="flex flex-1 overflow-hidden">
 
-        {/* Sidebar lista chat */}
         <div className="w-80 bg-white border-r flex flex-col">
           <div className="p-6 border-b">
             <h2 className="text-xl font-headline font-bold text-primary">
@@ -188,37 +147,29 @@ function ChatContent() {
             </h2>
           </div>
           <ScrollArea className="flex-1">
-            {myChats
-              ?.slice()
-              .sort((a, b) => (b.lastMessageTime?.seconds || 0) - (a.lastMessageTime?.seconds || 0))
-              .map((chat) => (
-                <div
-                  key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
-                  className={`p-4 border-b cursor-pointer transition-colors hover:bg-slate-50 ${
-                    activeChatId === chat.id ? "bg-blue-50 border-r-4 border-r-primary" : ""
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={`https://picsum.photos/seed/${chat.id}/100/100`} />
-                      <AvatarFallback>CH</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <span className="font-bold text-sm block truncate">
-                        {role === "Company"
-                          ? (instituteNameById[chat.instituteId] || "Istituto Partner")
-                          : role === "Institute"
-                          ? (companyNameById[chat.companyId] || "Azienda Interessata")
-                          : `${companyNameById[chat.companyId] || chat.companyId?.slice(0, 8)} ↔ ${instituteNameById[chat.instituteId] || chat.instituteId?.slice(0, 8)}`}
-                      </span>
-                      <span className="text-[10px] text-slate-400 block truncate">
-                        {chat.lastMessage || "Conversazione avviata"}
-                      </span>
-                    </div>
+            {myChats?.map((chat) => (
+              <div
+                key={chat.id}
+                onClick={() => setActiveChatId(chat.id)}
+                className={`p-4 border-b cursor-pointer transition-colors hover:bg-slate-50 ${
+                  activeChatId === chat.id ? "bg-blue-50 border-r-4 border-r-primary" : ""
+                }`}
+              >
+                <div className="flex gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                      {chatLabel(chat).substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <span className="font-bold text-sm block truncate">{chatLabel(chat)}</span>
+                    <span className="text-[10px] text-slate-400 block truncate">
+                      {chat.lastMessage || "Conversazione avviata"}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
             {(!myChats || myChats.length === 0) && (
               <div className="p-8 text-center text-slate-400 text-sm">
                 Nessuna conversazione attiva.
@@ -227,37 +178,24 @@ function ChatContent() {
           </ScrollArea>
         </div>
 
-        {/* Area messaggi */}
         {activeChat ? (
           <div className="flex-1 flex flex-col bg-slate-50">
-            {/* Header chat */}
             <div className="h-20 bg-white border-b flex items-center justify-between px-8">
               <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={`https://picsum.photos/seed/${activeChat.id}/100/100`} />
-                  <AvatarFallback>CH</AvatarFallback>
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
+                    {chatLabel(activeChat).substring(0, 2).toUpperCase()}
+                  </AvatarFallback>
                 </Avatar>
                 <div>
-                  <div className="font-bold text-primary">
-                    {role === "Company"
-                      ? (instituteNameById[activeChat.instituteId] || "Istituto Partner")
-                      : role === "Institute"
-                      ? (companyNameById[activeChat.companyId] || "Azienda Interessata")
-                      : "Monitoraggio Admin"}
-                  </div>
+                  <div className="font-bold text-primary">{chatLabel(activeChat)}</div>
                   <div className="text-xs text-slate-500">
-                    {activeChat.studentCVId
-                      ? "Oggetto: Interesse Profilo Studente"
-                      : "Conversazione Generale"}
+                    {activeChat.studentCvId ? "Oggetto: Interesse Profilo Studente" : "Conversazione Generale"}
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="text-slate-400">
-                <Phone className="w-5 h-5" />
-              </Button>
             </div>
 
-            {/* Lista messaggi */}
             <ScrollArea className="flex-1 p-8">
               <div className="flex flex-col gap-4">
                 {messages.length === 0 && (
@@ -268,29 +206,15 @@ function ChatContent() {
                   </div>
                 )}
                 {messages.map((msg) => {
-                  const isMine = msg.senderId === user?.uid;
-
+                  const isMine = msg.senderId === user?.id;
                   return (
-                    <div
-                      key={msg.id}
-                      className={`flex flex-col max-w-[70%] ${
-                        isMine ? "items-end self-end" : "items-start"
-                      }`}
-                    >
+                    <div key={msg.id} className={`flex flex-col max-w-[70%] ${isMine ? "items-end self-end" : "items-start"}`}>
                       <div className="text-[9px] text-slate-400 mb-1 px-2">{msg.senderEmail}</div>
-                      <div
-                        className={`p-4 rounded-2xl text-sm shadow-sm ${
-                          isMine
-                            ? "bg-white rounded-tr-none"
-                            : "bg-primary text-white rounded-tl-none"
-                        }`}
-                      >
+                      <div className={`p-4 rounded-2xl text-sm shadow-sm ${isMine ? "bg-white rounded-tr-none" : "bg-primary text-white rounded-tl-none"}`}>
                         {msg.text}
                       </div>
                       <div className="text-[9px] text-slate-400 mt-1 px-2">
-                        {msg.createdAt?.toDate
-                          ? format(msg.createdAt.toDate(), "HH:mm", { locale: it })
-                          : ""}
+                        {msg.createdAt ? format(new Date(msg.createdAt), "HH:mm", { locale: it }) : ""}
                       </div>
                     </div>
                   );
@@ -299,7 +223,6 @@ function ChatContent() {
               </div>
             </ScrollArea>
 
-            {/* Input messaggio — nascosto per Admin (solo monitoraggio) */}
             {role !== "Admin" && (
               <form onSubmit={handleSendMessage} className="p-6 bg-white border-t">
                 <div className="flex gap-4">
@@ -309,11 +232,7 @@ function ChatContent() {
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                   />
-                  <Button
-                    type="submit"
-                    disabled={!newMessage.trim()}
-                    className="bg-secondary hover:bg-secondary/90 text-white rounded-xl h-12 w-12 p-0"
-                  >
+                  <Button type="submit" disabled={!newMessage.trim()} className="bg-secondary hover:bg-secondary/90 text-white rounded-xl h-12 w-12 p-0">
                     <Send className="w-5 h-5" />
                   </Button>
                 </div>

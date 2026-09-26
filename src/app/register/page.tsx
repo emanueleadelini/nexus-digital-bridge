@@ -11,12 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Briefcase, GraduationCap, Loader2, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { notifyAdminOfNewUser, sendWelcomePendingEmail } from "@/app/actions/notifications";
+import { useToast } from "@/hooks/use-toast";
+import { useApiData, apiFetch } from "@/lib/api";
+
+interface Named { id: string; name: string }
 
 // Rimuove caratteri HTML pericolosi per prevenire XSS
 const sanitize = (str: string) => str.replace(/[<>"'`]/g, '').trim();
@@ -36,22 +35,10 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
-  const auth = useAuth();
-  const db = useFirestore();
   const router = useRouter();
 
-  const sectorsRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, "sectors");
-  }, [db]);
-
-  const typesRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return collection(db, "instituteTypes");
-  }, [db]);
-
-  const { data: availableSectors, isLoading: loadingSectors } = useCollection(sectorsRef);
-  const { data: availableTypes, isLoading: loadingTypes } = useCollection(typesRef);
+  const { data: availableSectors, isLoading: loadingSectors } = useApiData<Named[]>("/api/sectors");
+  const { data: availableTypes, isLoading: loadingTypes } = useApiData<Named[]>("/api/institute-types");
 
   const toggleSector = (sector: string) => {
     setSelectedSectors(prev =>
@@ -67,7 +54,6 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
 
     // Valida ruolo: solo 'company' o 'institute' sono ammessi
     const allowedRoles = ['company', 'institute'];
@@ -93,54 +79,31 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
-      const user = userCredential.user;
-
-      const userRole = role.charAt(0).toUpperCase() + role.slice(1);
       const displayName = sanitize(role === "company" ? companyName : instituteName);
 
-      // Scrittura atomica: profilo utente e dati specifici ruolo
-      const profilePath = role === "company" ? "companies" : "institutes";
-      const profileData: Record<string, unknown> = {
-        id: user.uid,
-        name: displayName,
-        email: email.trim().toLowerCase(),
-        status: "Pending",
-        sectorIds: selectedSectors,
-        createdAt: serverTimestamp(),
-      };
-
-      if (role === "institute") {
-        profileData.types = selectedTypes;
-      }
-
-      await Promise.all([
-        setDoc(doc(db, "users", user.uid), {
-          id: user.uid,
+      const res = await apiFetch("/api/register", {
+        json: {
           email: email.trim().toLowerCase(),
-          role: userRole,
-          status: "Pending",
+          password,
+          role,
+          entityName: displayName,
           firstName: sanitize(firstName),
           lastName: sanitize(lastName),
-          createdAt: serverTimestamp(),
-        }),
-        setDoc(doc(db, profilePath, user.uid), profileData),
-      ]);
+          sectorIds: selectedSectors,
+          types: role === "institute" ? selectedTypes : [],
+        },
+      });
 
-      notifyAdminOfNewUser({ email: email.trim().toLowerCase(), role: userRole, name: displayName }).catch(() => {});
-      sendWelcomePendingEmail(email.trim().toLowerCase(), firstName.trim()).catch(() => {});
+      if (!res.ok) {
+        const msg = (res.data as { error?: string }).error || "Errore durante la registrazione.";
+        toast({ variant: "destructive", title: "Errore registrazione", description: msg });
+        return;
+      }
 
       toast({ title: "Registrazione avvenuta", description: "Account in fase di verifica." });
-      router.push("/dashboard");
-    } catch (error: unknown) {
-      const firebaseError = error as { message?: string; code?: string };
-      let message = firebaseError.message || "Errore durante la registrazione.";
-      if (firebaseError.code === 'auth/email-already-in-use') {
-        message = "Questa email è già registrata. Prova ad accedere.";
-      } else if (firebaseError.code === 'auth/weak-password') {
-        message = "Password troppo debole. Usa almeno 8 caratteri.";
-      }
-      toast({ variant: "destructive", title: "Errore registrazione", description: message });
+      router.push("/pending-approval");
+    } catch {
+      toast({ variant: "destructive", title: "Errore registrazione", description: "Errore di connessione. Riprova." });
     } finally {
       setIsLoading(false);
     }

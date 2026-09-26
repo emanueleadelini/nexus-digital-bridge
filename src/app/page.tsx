@@ -2,48 +2,61 @@
 "use client";
 
 import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Briefcase, GraduationCap, Handshake, Zap, Calendar, ArrowRight, Lock, UserPlus, Settings2, ChevronRight, Mail } from "lucide-react";
+import { Briefcase, GraduationCap, Handshake, Zap, Calendar, ArrowRight, UserPlus, Settings2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useFirestore, useDoc, useCollection, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, orderBy, limit, where } from "firebase/firestore";
+import { useApiData } from "@/lib/api";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 
+interface LandingConfig {
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroImageUrl?: string;
+  featuresTitle?: string;
+  featuresSubtitle?: string;
+  feature1Title?: string;
+  feature1Desc?: string;
+  feature2Title?: string;
+  feature2Desc?: string;
+  feature3Title?: string;
+  feature3Desc?: string;
+  stat1Label?: string;
+  stat1Value?: string;
+  stat2Label?: string;
+  stat2Value?: string;
+  stat3Label?: string;
+  stat3Value?: string;
+  stat4Label?: string;
+  stat4Value?: string;
+}
+
+interface BlogPost {
+  id: string;
+  title: string;
+  excerpt?: string;
+  publishedAt?: string;
+  coverImage?: string | null;
+}
+
+interface PublicStats {
+  companies: number;
+  institutes: number;
+  students: number;
+  sectors: number;
+}
+
 export default function Home() {
-  const db = useFirestore();
-  
-  const configRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return doc(db, "config", "landingPage");
-  }, [db]);
-
-  const blogRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "blogPosts"), orderBy("publishedAt", "desc"), limit(3));
-  }, [db]);
-
-  const companiesRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "companies"), where("isDemo", "!=", true));
-  }, [db]);
-
-  const institutesRef = useMemoFirebase(() => {
-    if (!db) return null;
-    return query(collection(db, "institutes"), where("isDemo", "!=", true));
-  }, [db]);
-
-  const { data: config } = useDoc(configRef);
-  const { data: posts } = useCollection(blogRef);
-  const { data: companies } = useCollection(companiesRef);
-  const { data: institutes } = useCollection(institutesRef);
+  const { data: config } = useApiData<LandingConfig>("/api/content", 60_000);
+  const { data: stats } = useApiData<PublicStats>("/api/stats", 60_000);
+  const { data: posts } = useApiData<BlogPost[]>("/api/blog", 60_000);
 
   const heroPlaceholder = PlaceHolderImages.find(img => img.id === 'hero-bg');
 
-  // Fallback Values
   const content = {
     heroTitle: config?.heroTitle || "Il Ponte Digitale tra Talento e Opportunità",
     heroSubtitle: config?.heroSubtitle || "Colleghiamo Istituti Scolastici e Aziende attraverso un sistema di matching intelligente basato sui settori merceologici reali.",
@@ -56,27 +69,23 @@ export default function Home() {
     f2Desc: config?.feature2Desc || "Valorizza il percorso dei tuoi studenti caricando i loro CV. Ricevi notifiche quando un'azienda mostra interesse per i tuoi profili.",
     f3Title: config?.feature3Title || "Matching Intelligente",
     f3Desc: config?.feature3Desc || "Il nostro algoritmo analizza i settori merceologici Confindustria per suggerire le connessioni più promettenti tra domanda e offerta.",
-    s1Label: config?.stat1Label || "Aziende Iscritte",
-    s1Value: config?.stat1Value || "450+",
-    s2Label: config?.stat2Label || "Istituti Partner",
-    s2Value: config?.stat2Value || "120+",
-    s3Label: config?.stat3Label || "CV Studenti",
-    s3Value: config?.stat3Value || "8,500+",
     s4Label: config?.stat4Label || "Conversazioni",
-    s4Value: config?.stat4Value || "15k",
+    s4Value: config?.stat4Value || "100+",
   };
+
+  const latestPosts = (posts || []).slice(0, 3);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden bg-primary">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-96 h-96 bg-secondary rounded-full filter blur-3xl -translate-x-1/2 -translate-y-1/2" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-blue-400 rounded-full filter blur-3xl translate-x-1/2 translate-y-1/2" />
         </div>
-        
+
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="text-white space-y-8">
@@ -94,10 +103,10 @@ export default function Home() {
             </div>
             <div className="hidden lg:block relative">
               <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl border-8 border-white/10">
-                <Image 
-                  src={content.heroImageUrl} 
-                  alt="Nexus Hero Connection" 
-                  fill 
+                <Image
+                  src={content.heroImageUrl}
+                  alt="Nexus Hero Connection"
+                  fill
                   className="object-cover"
                   data-ai-hint={heroPlaceholder?.imageHint || "education business"}
                 />
@@ -108,7 +117,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="text-sm font-bold text-slate-500 uppercase">Match Attivi</div>
-                  <div className="text-2xl font-bold text-primary font-headline">+1,240</div>
+                  <div className="text-2xl font-bold text-primary font-headline">+{(stats?.companies ?? 0) * (stats?.students ?? 0) > 0 ? `${stats!.students}` : "0"}</div>
                 </div>
               </div>
             </div>
@@ -143,7 +152,7 @@ export default function Home() {
               number={3}
               icon={<Zap className="w-6 h-6" />}
               title="Connettiti"
-              description="L'algoritmo Nexus 3.0 calcola la compatibilità e ti suggerisce i match migliori. Inizia subito una conversazione diretta."
+              description="L'algoritmo Nexus calcola la compatibilità in modo spiegabile e ti suggerisce i match migliori. Inizia subito una conversazione diretta."
             />
           </div>
         </div>
@@ -158,19 +167,19 @@ export default function Home() {
               {content.featuresSubtitle}
             </p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard 
+            <FeatureCard
               icon={<Briefcase className="w-8 h-8" />}
               title={content.f1Title}
               description={content.f1Desc}
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<GraduationCap className="w-8 h-8" />}
               title={content.f2Title}
               description={content.f2Desc}
             />
-            <FeatureCard 
+            <FeatureCard
               icon={<Handshake className="w-8 h-8" />}
               title={content.f3Title}
               description={content.f3Desc}
@@ -179,20 +188,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* Stats Section — dati reali dalla piattaforma */}
       <section className="py-20 bg-slate-50 border-y">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <StatItem label="Aziende Registrate" value={companies ? `${companies.length}+` : (content.s1Value)} />
-            <StatItem label="Istituti Partner" value={institutes ? `${institutes.length}+` : (content.s2Value)} />
-            <StatItem label="Settori Confindustria" value="13" />
-            <StatItem label={content.s4Label} value={config?.stat4Value || "100+"} />
+            <StatItem label="Aziende Registrate" value={`${stats?.companies ?? 0}+`} />
+            <StatItem label="Istituti Partner" value={`${stats?.institutes ?? 0}+`} />
+            <StatItem label="CV Studenti" value={`${stats?.students ?? 0}+`} />
+            <StatItem label="Settori Confindustria" value={String(stats?.sectors ?? 0)} />
           </div>
         </div>
       </section>
 
       {/* Blog Preview Section */}
-      {posts && posts.length > 0 && (
+      {latestPosts.length > 0 && (
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="flex justify-between items-end mb-12">
@@ -204,23 +213,23 @@ export default function Home() {
                 <Link href="/blog">Vedi tutto <ArrowRight className="w-4 h-4" /></Link>
               </Button>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
-              {posts.map((post) => (
+              {latestPosts.map((post) => (
                 <Link key={post.id} href={`/blog/${post.id}`} className="group">
                   <Card className="border-none shadow-lg overflow-hidden h-full hover:shadow-2xl transition-all duration-300">
                     <div className="relative h-48 overflow-hidden">
-                      <Image 
-                        src={post.imageUrl || "https://picsum.photos/seed/blog/800/600"} 
-                        alt={post.title} 
-                        fill 
+                      <Image
+                        src={post.coverImage || "https://picsum.photos/seed/blog/800/600"}
+                        alt={post.title}
+                        fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-center gap-2 text-[10px] font-bold text-secondary uppercase tracking-widest">
                         <Calendar className="w-3 h-3" />
-                        {post.publishedAt ? format(post.publishedAt.toDate(), "d MMM yyyy", { locale: it }) : "Bozza"}
+                        {post.publishedAt ? format(new Date(post.publishedAt), "d MMM yyyy", { locale: it }) : "Bozza"}
                       </div>
                       <h3 className="text-xl font-bold font-headline group-hover:text-primary transition-colors line-clamp-2">
                         {post.title}
@@ -237,75 +246,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white">
-        <div className="container mx-auto px-4 py-16">
-          <div className="grid md:grid-cols-3 gap-12">
-            {/* Col sinistra */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <div className="bg-secondary text-white p-1.5 rounded-lg">
-                  <GraduationCap className="w-5 h-5" />
-                </div>
-                <span className="font-headline font-bold text-xl">Nexus Digital Bridge</span>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                La piattaforma italiana per il matching intelligente tra scuole e aziende. Valorizziamo il talento degli studenti attraverso tecnologia e connessioni reali.
-              </p>
-            </div>
-
-            {/* Col centro */}
-            <div className="space-y-4">
-              <h3 className="font-bold text-sm uppercase tracking-widest text-slate-400">Link Utili</h3>
-              <ul className="space-y-2">
-                {[
-                  { label: "Home", href: "/" },
-                  { label: "Chi Siamo", href: "/about" },
-                  { label: "Prezzi", href: "/pricing" },
-                  { label: "Blog", href: "/blog" },
-                  { label: "Privacy Policy", href: "/privacy" },
-                  { label: "Termini di Servizio", href: "/terms" },
-                ].map(({ label, href }) => (
-                  <li key={href}>
-                    <Link href={href} className="text-slate-400 hover:text-white transition-colors text-sm flex items-center gap-1.5">
-                      <ChevronRight className="w-3 h-3" />
-                      {label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Col destra */}
-            <div className="space-y-4">
-              <h3 className="font-bold text-sm uppercase tracking-widest text-slate-400">Contatti</h3>
-              <div className="space-y-3">
-                <a href="mailto:info@nexusdigitalbridge.it" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors text-sm">
-                  <Mail className="w-4 h-4 shrink-0" />
-                  info@nexusdigitalbridge.it
-                </a>
-                <div className="text-slate-500 text-sm pt-2">
-                  Sviluppato da <span className="text-secondary font-semibold">AD Next Lab</span>
-                </div>
-                <Link
-                  href="/login"
-                  className="inline-flex items-center gap-1.5 text-slate-500 hover:text-secondary transition-colors text-xs font-medium"
-                >
-                  <Lock className="w-3 h-3" />
-                  Area Riservata Admin
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-slate-800">
-          <div className="container mx-auto px-4 py-5">
-            <p className="text-slate-500 text-xs text-center">
-              © 2026 Nexus Digital Bridge by AD Next Lab — Tutti i diritti riservati.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

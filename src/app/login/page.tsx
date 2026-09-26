@@ -11,9 +11,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useAuth, useFirestore } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { authClient } from "@/lib/auth-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginPage() {
@@ -25,54 +23,44 @@ export default function LoginPage() {
 
   const { toast } = useToast();
   const router = useRouter();
-  const auth = useAuth();
-  const db = useFirestore();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth || !db) return;
-
     setIsLoading(true);
     setAuthError(null);
 
-    const cleanEmail = email.toLowerCase().trim();
-    const cleanPassword = password;
-
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, cleanPassword);
-      const user = userCredential.user;
+      const { error } = await authClient.signIn.email({
+        email: email.toLowerCase().trim(),
+        password,
+      });
 
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const userData = userDoc.data();
+      if (error) {
+        const message =
+          error.status === 429
+            ? "Troppi tentativi. Aspetta qualche minuto o reimposta la password."
+            : "Email o password errati. Controlla le credenziali e riprova.";
+        setAuthError(message);
+        toast({ variant: "destructive", title: "Errore di accesso", description: message });
+        return;
+      }
 
-      if (userData?.role === "Admin") {
+      // Ruolo deciso lato server: leggo il profilo reale
+      const meRes = await fetch("/api/me", { credentials: "include" });
+      const me = meRes.ok ? await meRes.json() : null;
+
+      if (me?.user?.role === "Admin") {
         router.push("/admin");
+      } else if (me?.user?.status === "Pending") {
+        router.push("/pending-approval");
+      } else if (me?.user?.status === "Rejected") {
+        router.push("/rejected");
       } else {
         router.push("/dashboard");
       }
       toast({ title: "Accesso effettuato", description: "Benvenuto su Nexus Digital Bridge." });
-
-    } catch (error: unknown) {
-
-      const firebaseError = error as { code?: string };
-      let message = "Credenziali non valide. Riprova.";
-
-      if (
-        firebaseError.code === 'auth/invalid-credential' ||
-        firebaseError.code === 'auth/user-not-found' ||
-        firebaseError.code === 'auth/wrong-password'
-      ) {
-        message = "Email o password errati. Controlla le credenziali e riprova.";
-      } else if (firebaseError.code === 'auth/too-many-requests') {
-        message = "Troppi tentativi. Aspetta qualche minuto o reimposta la password.";
-      }
-
-      setAuthError(message);
-      toast({
-        variant: "destructive",
-        title: "Errore di accesso",
-        description: message,
-      });
+    } catch {
+      setAuthError("Errore di connessione. Riprova.");
     } finally {
       setIsLoading(false);
     }
@@ -95,9 +83,7 @@ export default function LoginPage() {
               <Alert variant="destructive" className="rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Attenzione</AlertTitle>
-                <AlertDescription className="text-xs">
-                  {authError}
-                </AlertDescription>
+                <AlertDescription className="text-xs">{authError}</AlertDescription>
               </Alert>
             )}
 

@@ -2,36 +2,25 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { useMe } from "@/lib/api";
 import { Loader2 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser();
-  const db = useFirestore();
+  const { user, isLoading } = useMe();
   const router = useRouter();
 
-  const userRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, "users", user.uid);
-  }, [db, user]);
-
-  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userRef);
-
   useEffect(() => {
-    if (isUserLoading || isProfileLoading) return;
-
+    if (isLoading) return;
     if (!user) {
       router.replace("/login");
       return;
     }
-
-    if (userProfile && userProfile.role !== "Admin") {
+    if (user.role !== "Admin") {
       router.replace("/dashboard");
     }
-  }, [user, userProfile, isUserLoading, isProfileLoading, router]);
+  }, [user, isLoading, router]);
 
-  if (isUserLoading || isProfileLoading || !userProfile) {
+  if (isLoading || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -39,9 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (userProfile.role !== "Admin") {
-    return null;
-  }
+  if (user.role !== "Admin") return null;
 
   return <>{children}</>;
 }

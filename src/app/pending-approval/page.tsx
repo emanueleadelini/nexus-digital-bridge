@@ -3,30 +3,32 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Clock, ShieldAlert } from "lucide-react";
 import Link from "next/link";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { useMe } from "@/lib/api";
 
 export default function PendingApprovalPage() {
-  const { user } = useUser();
-  const db = useFirestore();
+  const { user } = useMe();
   const router = useRouter();
 
-  const userRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return doc(db, "users", user.uid);
-  }, [db, user]);
-
-  const { data: profile } = useDoc(userRef);
-
+  // Poll leggero: quando l'admin approva, redirect automatico in dashboard
   useEffect(() => {
-    if (profile?.status === 'Approved') {
+    if (user?.status === 'Approved') {
       router.push('/dashboard');
+      return;
     }
-  }, [profile, router]);
+    const t = setInterval(async () => {
+      const res = await fetch("/api/me", { credentials: "include" });
+      if (res.ok) {
+        const me = await res.json();
+        if (me?.user?.status === 'Approved') router.push('/dashboard');
+        if (me?.user?.status === 'Rejected') router.push('/rejected');
+      }
+    }, 10_000);
+    return () => clearInterval(t);
+  }, [user, router]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -39,7 +41,7 @@ export default function PendingApprovalPage() {
           <CardContent className="p-8 text-center space-y-6">
             <h2 className="text-2xl font-headline font-bold text-primary">Registrazione in Attesa</h2>
             <p className="text-slate-500 leading-relaxed">
-              Ciao {profile?.firstName || 'Utente'}, abbiamo ricevuto la tua richiesta. Il tuo profilo è attualmente in fase di verifica manuale.
+              Ciao {user?.firstName || 'Utente'}, abbiamo ricevuto la tua richiesta. Il tuo profilo è attualmente in fase di verifica manuale.
             </p>
             <div className="bg-slate-50 p-4 rounded-2xl flex items-center gap-3 text-left">
               <Clock className="w-10 h-10 text-secondary" />

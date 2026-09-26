@@ -1,141 +1,125 @@
 "use client";
 
-import { use } from "react";
 import { Navbar } from "@/components/layout/Navbar";
-import { useFirestore, useDoc, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/button";
+import { Calendar, User, ArrowLeft, Loader2, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { Calendar, User, ArrowLeft, Clock, Share2, GraduationCap } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { useParams } from "next/navigation";
+import { useApiData } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
-export default function BlogPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const db = useFirestore();
-  
-  const postRef = useMemoFirebase(() => {
-    if (!db || !id) return null;
-    return doc(db, "blogPosts", id);
-  }, [db, id]);
+interface BlogPost {
+  id: string;
+  title: string;
+  content?: string;
+  author: string;
+  publishedAt?: string;
+  coverImage?: string | null;
+  tags?: string[];
+}
 
-  const { data: post, isLoading } = useDoc(postRef);
+export default function BlogPostPage() {
+  const params = useParams();
+  const id = params?.id as string;
+  const { toast } = useToast();
+
+  const { data: post, isLoading } = useApiData<BlogPost>(`/api/blog/${id}`, 60_000);
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast({ title: "Link copiato", description: "Il link all'articolo è negli appunti." });
+    } catch {
+      toast({ variant: "destructive", title: "Errore", description: "Impossibile copiare il link." });
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="container mx-auto px-4 py-20 animate-pulse space-y-8">
-          <div className="h-10 bg-slate-200 w-2/3 rounded-xl mx-auto" />
-          <div className="h-[400px] bg-slate-200 w-full rounded-3xl" />
-          <div className="space-y-4 max-w-3xl mx-auto">
-            <div className="h-4 bg-slate-200 rounded w-full" />
-            <div className="h-4 bg-slate-200 rounded w-5/6" />
-            <div className="h-4 bg-slate-200 rounded w-4/6" />
-          </div>
-        </div>
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </main>
+        <Footer />
       </div>
     );
   }
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="flex flex-col min-h-screen">
         <Navbar />
-        <div className="flex-1 flex flex-col items-center justify-center p-4">
-          <h1 className="text-3xl font-bold text-primary mb-4">Articolo non trovato</h1>
-          <Button asChild>
-            <Link href="/">Torna alla Home</Link>
-          </Button>
-        </div>
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <h1 className="text-2xl font-bold text-slate-700">Articolo non trovato</h1>
+            <Button asChild variant="outline">
+              <Link href="/blog">Torna al Blog</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen">
       <Navbar />
-      
-      <article className="pb-20">
-        {/* Header Articolo */}
-        <header className="bg-primary pt-12 pb-32 text-white relative">
-          <div className="container mx-auto px-4 max-w-4xl text-center space-y-6">
-            <Link href="/" className="inline-flex items-center gap-2 text-blue-200 hover:text-white mb-4 transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Torna alla Home
-            </Link>
-            <h1 className="text-4xl md:text-6xl font-headline font-bold leading-tight">
-              {post.title}
-            </h1>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-blue-100 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-secondary" />
-                {post.publishedAt ? format(post.publishedAt.toDate(), "d MMMM yyyy", { locale: it }) : "In Revisione"}
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-secondary" />
-                Scritto da: {post.author}
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-secondary" />
-                {Math.max(1, Math.ceil((post.content?.split(' ').length || 0) / 200))} min di lettura
-              </div>
-            </div>
-          </div>
-        </header>
+      <main className="flex-1 bg-slate-50 py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <Link href="/blog" className="inline-flex items-center gap-2 text-primary font-bold mb-8 hover:underline">
+            <ArrowLeft className="w-4 h-4" /> Torna al Blog
+          </Link>
 
-        {/* Immagine Hero e Contenuto */}
-        <div className="container mx-auto px-4 max-w-4xl -mt-20 relative z-10">
-          <div className="relative aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
-            <Image 
-              src={post.imageUrl || "https://picsum.photos/seed/blog-nexus/1200/800"} 
-              alt={post.title} 
-              fill 
-              className="object-cover"
-            />
-          </div>
+          <article className="bg-white rounded-3xl overflow-hidden shadow-xl">
+            {post.coverImage && (
+              <div className="relative h-[400px]">
+                <Image src={post.coverImage} alt={post.title} fill className="object-cover" />
+              </div>
+            )}
+            <div className="p-8 md:p-12">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-6 text-sm text-slate-500">
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {post.publishedAt ? format(new Date(post.publishedAt), "d MMMM yyyy", { locale: it }) : "—"}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <User className="w-4 h-4" /> {post.author}
+                  </span>
+                </div>
+                <Button variant="outline" size="sm" className="rounded-full gap-2" onClick={handleShare}>
+                  <Share2 className="w-3 h-3" /> Condividi
+                </Button>
+              </div>
 
-          <div className="bg-white mt-12 p-8 md:p-12 rounded-3xl shadow-xl space-y-8">
-            <div className="prose prose-slate lg:prose-xl max-w-none">
-              <p className="text-xl text-slate-600 font-medium italic border-l-4 border-secondary pl-6 mb-8">
-                {post.excerpt}
-              </p>
-              
-              <div className="whitespace-pre-line text-slate-700 leading-relaxed text-lg">
+              <h1 className="text-4xl md:text-5xl font-headline font-bold text-primary mb-8 leading-tight">
+                {post.title}
+              </h1>
+
+              <div className="prose prose-slate max-w-none prose-lg text-slate-600 whitespace-pre-wrap">
                 {post.content}
               </div>
-            </div>
 
-            <div className="pt-8 border-t flex justify-between items-center">
-              <div className="flex flex-wrap gap-2">
-                {post.tags?.map((tag: string) => (
-                  <span key={tag} className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-bold uppercase tracking-wider">
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-              <Button variant="ghost" size="icon" className="text-slate-400 hover:text-primary">
-                <Share2 className="w-5 h-5" />
-              </Button>
+              {post.tags && post.tags.length > 0 && (
+                <div className="mt-12 pt-8 border-t border-slate-100 flex flex-wrap gap-2">
+                  {post.tags.map((tag) => (
+                    <span key={tag} className="bg-slate-100 text-slate-600 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+          </article>
         </div>
-      </article>
-
-      {/* Footer semplificato */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <GraduationCap className="w-8 h-8 text-secondary" />
-            <span className="font-headline font-bold text-2xl">Nexus Digital Bridge</span>
-          </div>
-          <div className="flex justify-center gap-6 mb-4 text-sm text-slate-400">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Termini di Servizio</Link>
-          </div>
-          <p className="text-slate-500 text-sm italic">© 2026 Nexus Digital Bridge - "Colleghiamo oggi il talento di domani."</p>
-        </div>
-      </footer>
+      </main>
+      <Footer />
     </div>
   );
 }

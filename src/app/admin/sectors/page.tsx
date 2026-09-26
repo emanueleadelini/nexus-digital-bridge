@@ -5,52 +5,42 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, Edit2, Database, Loader2 } from "lucide-react";
+import { Plus, Trash2, Database, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useFirestore, useCollection, useMemoFirebase, useUser } from "@/firebase";
-import { collection, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { useApiData, apiFetch } from "@/lib/api";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
+interface Named { id: string; name: string }
+
 export default function AdminSectorsPage() {
-  const db = useFirestore();
-  const { user } = useUser();
   const { toast } = useToast();
   const [newSector, setNewSector] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
-  const sectorsRef = useMemoFirebase(() => {
-    if (!db || !user) return null;
-    return collection(db, "sectors");
-  }, [db, user]);
-
-  const { data: sectors, isLoading } = useCollection(sectorsRef);
+  const { data: sectors, isLoading, refetch } = useApiData<Named[]>("/api/admin/sectors");
 
   const handleAdd = async () => {
     const trimmed = newSector.trim();
-    if (!trimmed || !sectorsRef) return;
-    if (sectors?.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
-      toast({ variant: "destructive", title: "Duplicato", description: `"${trimmed}" esiste già.` });
-      return;
-    }
+    if (!trimmed) return;
     setIsAdding(true);
-    try {
-      await addDoc(sectorsRef, { name: trimmed });
+    const res = await apiFetch("/api/admin/sectors", { json: { name: trimmed } });
+    setIsAdding(false);
+    if (res.ok) {
       setNewSector("");
       toast({ title: "Settore aggiunto", description: `${trimmed} è ora disponibile nel sistema.` });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiungere il settore." });
-    } finally {
-      setIsAdding(false);
+      refetch(true);
+    } else {
+      toast({ variant: "destructive", title: "Errore", description: (res.data as { error?: string }).error || "Impossibile aggiungere il settore." });
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!db) return;
-    try {
-      await deleteDoc(doc(db, "sectors", id));
-      toast({ title: "Settore rimosso", description: "Il settore è stato eliminato correttamente." });
-    } catch (error) {
+  const handleDelete = async (id: string, name: string) => {
+    const res = await apiFetch(`/api/admin/sectors/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast({ title: "Settore rimosso", description: "Il settore è stato eliminato." });
+      refetch(true);
+    } else {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile eliminare il settore." });
     }
   };
@@ -87,10 +77,10 @@ export default function AdminSectorsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
-                <Input 
+                <Input
                   value={newSector}
                   onChange={(e) => setNewSector(e.target.value)}
-                  placeholder="Esempio: Aerospaziale, Biomedicale..." 
+                  placeholder="Esempio: Aerospaziale, Biomedicale..."
                   className="rounded-xl"
                   onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
                 />
@@ -115,7 +105,7 @@ export default function AdminSectorsPage() {
                   sectors.map((sector) => (
                     <TableRow key={sector.id} className="hover:bg-blue-50/50">
                       <TableCell className="font-medium text-slate-700">{sector.name}</TableCell>
-                      <TableCell className="text-right flex justify-end gap-2">
+                      <TableCell className="text-right">
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="icon" className="text-slate-400 hover:text-destructive">
@@ -125,11 +115,11 @@ export default function AdminSectorsPage() {
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Eliminare il settore?</AlertDialogTitle>
-                              <AlertDialogDescription>"{sector.name}" verrà rimosso. Gli utenti che lo usano non saranno aggiornati automaticamente.</AlertDialogDescription>
+                              <AlertDialogDescription>"{sector.name}" verrà rimosso. I profili che lo usano non saranno aggiornati automaticamente.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annulla</AlertDialogCancel>
-                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(sector.id)}>Elimina</AlertDialogAction>
+                              <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(sector.id, sector.name)}>Elimina</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
