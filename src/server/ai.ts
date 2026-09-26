@@ -1,8 +1,9 @@
 /**
- * Parsing CV via LLM self-hosted su OVH (llama-swap, OpenAI-compatible).
- * Estrazione testo dal PDF lato server, poi prompt strutturato -> JSON.
- * Config in env: LLM_BASE_URL, LLM_API_KEY, LLM_MODEL
- * (sul server valorizzate da /root/shared/chatmate.env).
+ * Parsing CV via LLM — primario Regolo AI (Italia, OpenAI-compatible),
+ * fallback OVH Kepler (rotte autorizzate da /root/shared/* env).
+ * Estrazione testo PDF lato server con pdftotext (poppler), poi JSON strutturato.
+ * Env: LLM_BASE_URL/LLM_API_KEY/LLM_MODEL (primario),
+ *      LLM_FALLBACK_BASE_URL/LLM_FALLBACK_API_KEY/LLM_FALLBACK_MODEL (fallback).
  */
 import { INDUSTRY_SECTORS } from "@/lib/constants";
 import { execFile } from "child_process";
@@ -23,11 +24,15 @@ export interface ParsedCV {
 }
 
 const LLM_BASE_URL =
-  process.env.LLM_BASE_URL ||
-  process.env.CHATMATE_URL ||
-  "http://host.docker.internal:11600/v1";
-const LLM_API_KEY = process.env.LLM_API_KEY || process.env.CHATMATE_KEY || "";
-const LLM_MODEL = process.env.LLM_MODEL || process.env.CHATMATE_MODEL || "gpt-oss-120b";
+  process.env.LLM_BASE_URL || "https://api.regolo.ai/v1";
+const LLM_API_KEY = process.env.LLM_API_KEY || "";
+const LLM_MODEL = process.env.LLM_MODEL || "glm5.2";
+// Fallback autorizzato: OVH Kepler (CHATMATE_* da /root/shared/chatmate.env)
+const LLM_FB_BASE_URL =
+  process.env.LLM_FALLBACK_BASE_URL || process.env.CHATMATE_URL || "";
+const LLM_FB_API_KEY = process.env.LLM_FALLBACK_API_KEY || process.env.CHATMATE_KEY || "";
+const LLM_FB_MODEL =
+  process.env.LLM_FALLBACK_MODEL || process.env.CHATMATE_MODEL || "gpt-oss-120b";
 
 export async function extractPdfText(buffer: Buffer): Promise<string> {
   // pdftotext (poppler): parser PDF di riferimento, gestisce qualunque variante.
@@ -42,6 +47,36 @@ export async function extractPdfText(buffer: Buffer): Promise<string> {
   } finally {
     await unlink(tmp).catch(() => {});
   }
+}
+
+async function callLLM(
+  baseUrl: string,
+  apiKey: string,
+  model: string,
+  prompt: string
+): Promise<string> {
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`LLM ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
+  return data.choices?.[0]?.message?.content || "";
 }
 
 export async function parseCVText(pdfText: string): Promise<ParsedCV> {
@@ -61,30 +96,17 @@ Formato risposta: {"name":"...","studentClass":"...","summary":"...","suggestedS
 TESTO CV:
 ${trimmed}`;
 
-  const res = await fetch(`${LLM_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(LLM_API_KEY ? { Authorization: `Bearer ${LLM_API_KEY}` } : {}),
-    },
-    body: JSON.stringify({
-      model: LLM_MODEL,
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0.1,
-      response_format: { type: "json_object" },
-    }),
-    signal: AbortSignal.timeout(60_000),
-  });
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`LLM parse failed: ${res.status} ${body.slice(0, 200)}`);
+  let raw: string;
+  try {
+    raw = await callLLM(LLM_BASE_URL, LLM_API_KEY, LLM_MODEL, prompt);
+  } catch (primaryErr) {
+    if (!LLM_FB_BASE_URL) throw primaryErr;
+    console.warn(
+      `[ai] LLM primario fallito (${(primaryErr as Error).message.slice(0, 80)}) — fallback`
+    );
+    raw = await callLLM(LLM_FB_BASE_URL, LLM_FB_API_KEY, LLM_FB_MODEL, prompt);
   }
 
-  const data = (await res.json()) as {
-    choices?: { message?: { content?: string } }[];
-  };
-  const raw = data.choices?.[0]?.message?.content || "";
   const cleaned = raw.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(cleaned) as Partial<ParsedCV>;
 

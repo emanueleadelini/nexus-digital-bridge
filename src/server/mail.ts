@@ -6,8 +6,9 @@ import nodemailer from "nodemailer";
 
 const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL || "https://nexusdigitalbridge.it";
-const MAIL_FROM =
-  process.env.MAIL_FROM || "Nexus Digital Bridge <noreply@nexusdigitalbridge.it>";
+const MAIL_FROM = `"${(process.env.MAIL_FROM_NAME || "Nexus Digital Bridge").replace(/"/g, "")}" <${
+  process.env.MAIL_FROM || "noreply@nexusdigitalbridge.it"
+}>`;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
 
 const transporter = nodemailer.createTransport({
