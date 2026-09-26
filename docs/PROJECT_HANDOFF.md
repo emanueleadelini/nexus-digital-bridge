@@ -1,41 +1,57 @@
 # PROJECT_HANDOFF — Nexus Digital Bridge
 
-Ultimo checkpoint: 2026-09-26 (sessione devin, ri-platforming avviato)
+Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata nel codice, deploy non ancora fatto)
 
 ## Dove siamo
 
-- Piattaforma live su `nexusdigitalbridge.it`: Next.js standalone in Docker
-  `nexus-digital-bridge` (127.0.0.1:8812→3000), nginx+certbot.
-- Backend legacy su Firebase (project `studio-2511976075-f03a5`).
-- Decisione Capo 2026-09-26: **NO Firebase** → migrazione completa self-host
-  OVH: PostgreSQL 16 `nexus_bridge` + Drizzle + Better Auth, PDF su volume,
-  parsing CV via llama-swap :11600, email via postfix, Sentry→EmaMonitor.
-- Decisions Capo stessa sessione: PDF originale salvato; chat azienda→istituto
-  sempre + istituto→azienda solo se match>0; scoring deterministico
-  (settori*90+keyword*10), AI solo parsing.
+- **Migrazione Firebase → self-hosted completata a livello codice** su branch
+  `feat/selfhost-backend` (commit `ca83d1c`+). Build Next verde: 54 route,
+  typecheck pulito, zero import Firebase/Genkit/Resend/Sentry.
+- Live pubblica ancora su stack Firebase congelato (`main`, container
+  `nexus-digital-bridge` :8812). **Cutover non ancora eseguito.**
+- Sul server: Postgres `nexus_bridge` creato (utente `nexus`, pg_hba aggiornato
+  per `172.17.0.0/16`), schema applicato da `drizzle/0000_init_selfhost.sql`.
+- `.env` server scritto in `/root/projects/nexus-digital-bridge/.env`
+  (chmod 600): DATABASE_URL, BETTER_AUTH_SECRET/URL, SMTP, LLM, UPLOAD_DIR.
+- Container di test `nexus-test` su :8813 con volume `nexus-uploads` (non
+  tocca la produzione).
 
-## Branch
+## Smoke test E2E già verificati (container :8813)
 
-- `main` = live Firebase (congelato fino a cutover)
-- `feat/selfhost-backend` = riscrittura backend
+- Registrazione company/institute → Pending ✅
+- Promozione Admin via SQL ✅, login Better Auth con cookie ✅
+- `/api/admin/seed` → 13 settori + 31 tipologie ✅
+- CV manuale → match bidirezionale 90% (company vede `instituteName`,
+  institute vede `interestedCompanies`) ✅
+- Chat: azienda→istituto ✅; istituto→azienda con match → dedup ✅;
+  istituto→azienda senza match → **403** ✅; estraneo su messaggi → **403** ✅
+- Upload PDF → `pdf_path` salvato su volume; download `/api/cv/[id]/pdf` ✅
+- Notifiche in-app + badge sidebar ✅
 
-## Piano in corso (fasi)
+## Bug risolti in sessione
 
-0. Knowledge baseline (manuali compilati v0.2.0) ✅ questa sessione
-1. Fondamenta: schema Drizzle, Better Auth, seed, pagine auth
-2. Migrazione feature: profili/students+PDF/matches/search/chat/admin/pubbliche
-3. Feature visione: match bidirezionale, % per-istituto, nome istituto su
-   card, badge nuovi match, regole chat
-4. Migrazione dati Firestore→Postgres (GAP: serve service account o export)
-5. Compliance: ChatMate, EmaMonitor, THREAT-MODEL, SLO, data-map GDPR minori
-6. Deploy+cutover+smoke E2E+closeout
+- `chats.creator_id` aggiunto a schema+migration (era usato ma mancante).
+- `/api/admin/demo` DELETE cancellava TUTTI gli utenti non-admin → fix per id `demo-*`.
+- `/api/matches` ritorna `{role,matches|students}` → page unwrap corretto.
+- `pdf-parse` v2 richiede DOMMatrix/canvas → downgrade a **1.1.1** + `@types`.
+- `blogPosts.coverImage` non salvato dal POST admin → fix.
+- Email Resend (dead code) → `src/server/mail.ts` nodemailer con dominio corretto.
 
-## Prossimo passo
+## Da fare (prossimi passi)
 
-Fase 1: schema DB + auth. Vedere `MANUALE_NEXUS_DIGITAL_BRIDGE.md` sez.3.
+1. **Fix parsing AI**: pdf-parse 1.1.1 in rebuild — verificare estrazione testo
+   + parseCVText con llama-swap reale (env `LLM_API_KEY` già valorizzata).
+2. **Postfix**: mailer fallisce `ECONNREFUSED 172.17.0.1:25` — host non ha SMTP.
+   Opzioni: postfix container (pattern polouniversitariosantostefano) o host.
+3. `/api/blog/[id]` e `/api/content` pubbliche aggiunte — da verificare in smoke.
+4. Deploy: rebuild `nexus-selfhost:test` con fix, smoke completo, poi cutover
+   nginx su :8812 (stop vecchio container Firebase, rename).
+5. Fase 4 dati: decidere se recuperare export Firestore (serve service account).
+6. Fase 5: ChatMate + EmaMonitor + THREAT-MODEL/SLO/GDPR (CV minori).
 
 ## Rischi aperti
 
-- Disco server 90% (47G liberi).
+- Disco server 90% (47G liberi) — attenzione alle immagini docker vecchie.
 - Credenziali Firebase admin non nel repo: export dati da coordinare.
+- Postfix non configurato: le email falliscono silenziosamente (log only).
 - llama-swap :11600 richiede API key (da env autorizzato, mai in git).

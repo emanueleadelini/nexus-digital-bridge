@@ -22,8 +22,9 @@ const LLM_API_KEY = process.env.LLM_API_KEY || process.env.CHATMATE_KEY || "";
 const LLM_MODEL = process.env.LLM_MODEL || process.env.CHATMATE_MODEL || "gpt-oss-120b";
 
 export async function extractPdfText(buffer: Buffer): Promise<string> {
-  // pdf-parse 1.x: API a funzione, puro JS (niente canvas/DOMMatrix)
-  const pdfParse = (await import("pdf-parse")).default as unknown as (
+  // pdf-parse 1.x puro JS. Import dal file lib per bypassare il debug-mode
+  // di index.js (cerca ./test/data/*.pdf quando module.parent e' undefined).
+  const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default as unknown as (
     b: Buffer
   ) => Promise<{ text: string }>;
   const result = await pdfParse(buffer);
