@@ -1,20 +1,26 @@
 # PROJECT_HANDOFF — Nexus Digital Bridge
 
-Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata nel codice, deploy non ancora fatto)
+Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
 
-## Dove siamo
+## Dove siamo — STATO: LIVE SU STACK SELF-HOSTED
 
-- **Migrazione Firebase → self-hosted completata a livello codice** su branch
-  `feat/selfhost-backend` (commit `ca83d1c`+). Build Next verde: 54 route,
-  typecheck pulito, zero import Firebase/Genkit/Resend/Sentry.
-- Live pubblica ancora su stack Firebase congelato (`main`, container
-  `nexus-digital-bridge` :8812). **Cutover non ancora eseguito.**
-- Sul server: Postgres `nexus_bridge` creato (utente `nexus`, pg_hba aggiornato
-  per `172.17.0.0/16`), schema applicato da `drizzle/0000_init_selfhost.sql`.
-- `.env` server scritto in `/root/projects/nexus-digital-bridge/.env`
-  (chmod 600): DATABASE_URL, BETTER_AUTH_SECRET/URL, SMTP, LLM, UPLOAD_DIR.
-- Container di test `nexus-test` su :8813 con volume `nexus-uploads` (non
-  tocca la produzione).
+- **`nexusdigitalbridge.it` serve il nuovo stack** (verificato: HTTPS 200,
+  `/api/health` → `db:up`). Container `nexus-digital-bridge` su `127.0.0.1:8812`,
+  immagine `nexus-selfhost:prod`, restart `unless-stopped`.
+- Vecchio container Firebase **fermato e rinominato `nexus-firebase-legacy`**
+  (rollback = `docker rename` + start).
+- **Dati migrati da Firestore**: export via REST con OAuth cloud-platform
+  (`scripts/export-firestore.js`, usa sessione firebase-tools del PC),
+  import via `scripts/import-firestore.js`. Risultato: 8 utenti reali +
+  20 stub demo, 13 aziende, 14 istituti, 101 CV, 3 chat, 6 messaggi,
+  13 settori, 31 tipologie.
+- **Admin `emanueleadelini@gmail.com` attivo**: password impostata via hash
+  scrypt compatibile Better Auth, salvata in `/root/.nexus-admin-pw` (600).
+  Login verificato, admin/stats 200, 29 utenti in lista.
+- Test container `nexus-test` su :8813 ancora attivo (stessa immagine).
+- **Password utenti migrati NON esistono**: ogni utente reale deve fare
+  "password dimenticata" al primo accesso (o admin reset via SQL con
+  `/tmp/nexus-migrate/setpw.js`).
 
 ## Smoke test E2E già verificati (container :8813)
 
@@ -59,16 +65,17 @@ Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata n
 
 ## Da fare (prossimi passi)
 
-1. ~~Fix parsing AI~~ — **risolto** (pdftotext + Regolo glm5.2 + fallback Kepler).
-2. ~~SMTP~~ — **risolto**: postfix host attivo, subnet docker autorizzata, invio ok.
-   Resta caveat deliverability (IP OVH senza PTR/SPF → possibile spam; da
-   verificare con casella reale, eventuale Aruba relay dopo).
-3. **Migrazione dati Firestore**: script `scripts/migrate-firestore.js` pronto
-   (dry-run + apply, uid Firebase → id Postgres, password non migrabili → reset).
-   **Serve service account JSON** — non presente sul server, richiesto al Capo.
-4. Deploy: pulire dati di test, cutover nginx su :8812 (stop/rename vecchio
-   container Firebase), smoke E2E finale.
-5. Fase 5: ChatMate + EmaMonitor. THREAT-MODEL/SLO/GDPR bozze in `ops/`.
+1. **DNS Aruba — bloccante per le email** (`ops/DNS-RECORDS.md` con i record
+   esatti): SPF TXT `@`, DKIM TXT `mail._domainkey`, PTR OVH, DMARC opzionale.
+   Finché non pubblicati, Gmail/Outlook rifiutano le mail (550 unauthenticated).
+   opendkim firma già correttamente (`d=nexusdigitalbridge.it s=mail`).
+2. **Password reset utenti migrati**: comunicare agli utenti di usare
+   "password dimenticata" (funzionerà dopo punto 1) o reset via SQL.
+3. **EmaMonitor**: agganciare `/api/health` (SLO in `ops/SLO.md`).
+4. Pulizia: rimuovere `nexus-test` :8813 quando non serve più; pruning
+   immagini/volumi docker (disco era al 93%, ora ~92% dopo pulizia).
+5. Dopo N giorni di stabilità: eliminare `nexus-firebase-legacy`.
+6. Threat model/SLO/GDPR bozze in `ops/` — da completare col Capo.
 
 ## Rischi aperti
 
