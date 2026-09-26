@@ -1,0 +1,2126 @@
+{
+ "users": [
+  {
+   "id": "CUYTirxrE5SHWlScBgv8UYgu1np1",
+   "firstName": "Emanuele",
+   "email": "emanueleadelini@gmail.com",
+   "status": "Approved",
+   "updatedAt": "2026-04-08T09:07:25.956Z",
+   "role": "Admin",
+   "lastName": "Admin"
+  },
+  {
+   "id": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "status": "Approved",
+   "email": "alphadeltasrl@gmail.com",
+   "createdAt": "2026-02-05T11:11:37.853Z",
+   "firstName": "Emanuele",
+   "role": "Company",
+   "lastName": "Adelini"
+  },
+  {
+   "id": "Pc7RtAFRMrY0nhmmA4ZuME83OAp1",
+   "role": "Company",
+   "firstName": "mario",
+   "createdAt": "2026-02-18T12:17:36.335Z",
+   "email": "alphadeltasrl+1@gmail.com",
+   "lastName": "rossi",
+   "status": "Approved"
+  },
+  {
+   "id": "PiLHqQwFcaMepXup9xhInT7kU0e2",
+   "createdAt": "2026-02-11T07:23:11.550Z",
+   "firstName": "franco",
+   "status": "Approved",
+   "role": "Institute",
+   "email": "uniitaliasrl@gmail.com",
+   "lastName": "franchi"
+  },
+  {
+   "id": "S8SfipO3xhPrelmoSnlrYnoJVcf1",
+   "status": "Approved",
+   "email": "uniitaliasrl+1@gmail.com",
+   "createdAt": "2026-03-24T08:19:34.865Z",
+   "firstName": "ciccino",
+   "role": "Institute",
+   "lastName": "cicci"
+  },
+  {
+   "id": "dc84prlcX8cnyXSZbxnJQpUNcsh2",
+   "createdAt": "2026-02-10T17:42:20.703Z",
+   "lastName": "bo",
+   "firstName": "gianpaolo",
+   "status": "Approved",
+   "role": "Company",
+   "email": "gianpaolo.bo@esagonosrl.it"
+  },
+  {
+   "id": "ilJJrcuIn7Zz98NEeLkwyM53rdJ2",
+   "email": "bolletteadelini@gmail.com",
+   "role": "Institute",
+   "lastName": "istituto",
+   "createdAt": "2026-02-26T14:09:15.762Z",
+   "firstName": "nuovo",
+   "status": "Approved"
+  },
+  {
+   "id": "miG9YfvdgCbvDHGTyHKDE28gwRh1",
+   "status": "Approved",
+   "email": "provaistituto@gmail.com",
+   "createdAt": "2026-03-10T17:12:44.286Z",
+   "firstName": "Emanuele",
+   "role": "Institute",
+   "lastName": "Adelini"
+  }
+ ],
+ "companies": [
+  {
+   "id": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "email": "alphadeltasrl@gmail.com",
+   "name": "Emanuele Adelini",
+   "sectorIds": [
+    "Automobilistico",
+    "Edilizia e Materiali",
+    "Aerospazio",
+    "Turismo e Beni Culturali",
+    "Legno e Arredo",
+    "Servizi Avanzati",
+    "ICT e Digitale",
+    "Moda e Tessile",
+    "Logistica e Trasporti"
+   ],
+   "status": "Approved"
+  },
+  {
+   "id": "Pc7RtAFRMrY0nhmmA4ZuME83OAp1",
+   "createdAt": "2026-02-18T12:17:36.944Z",
+   "status": "Approved",
+   "name": "plutotopsrl",
+   "email": "alphadeltasrl+1@gmail.com",
+   "sectorIds": [
+    "Automobilistico",
+    "Turismo e Beni Culturali",
+    "ICT e Digitale",
+    "Energia e Ambiente",
+    "Chimica e Farmaceutica",
+    "Meccanica e Meccatronica",
+    "Moda e Tessile",
+    "Legno e Arredo",
+    "Edilizia e Materiali",
+    "Aerospazio",
+    "Servizi Avanzati",
+    "Logistica e Trasporti",
+    "Alimentare"
+   ]
+  },
+  {
+   "id": "dc84prlcX8cnyXSZbxnJQpUNcsh2",
+   "name": "gianpaolo bo",
+   "status": "Approved",
+   "email": "gianpaolo.bo@esagonosrl.it"
+  },
+  {
+   "id": "demo-company-1",
+   "website": "https://demo-azienda-1.it",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Legno e Arredo"
+   ],
+   "vatNumber": "IT12345678901",
+   "status": "Approved",
+   "address": "Via delle Imprese 1, Milano",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "name": "Azienda Demo 1 - Edilizia e Materiali"
+  },
+  {
+   "id": "demo-company-10",
+   "website": "https://demo-azienda-10.it",
+   "vatNumber": "IT123456789010",
+   "sectorIds": [
+    "Aerospazio",
+    "Edilizia e Materiali"
+   ],
+   "status": "Approved",
+   "address": "Via delle Imprese 10, Milano",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "name": "Azienda Demo 10 - Aerospazio"
+  },
+  {
+   "id": "demo-company-2",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "website": "https://demo-azienda-2.it",
+   "status": "Approved",
+   "vatNumber": "IT12345678902",
+   "name": "Azienda Demo 2 - Servizi Avanzati",
+   "address": "Via delle Imprese 2, Milano",
+   "isDemo": true,
+   "sectorIds": [
+    "Servizi Avanzati",
+    "Aerospazio"
+   ]
+  },
+  {
+   "id": "demo-company-3",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "website": "https://demo-azienda-3.it",
+   "name": "Azienda Demo 3 - Turismo e Beni Culturali",
+   "vatNumber": "IT12345678903",
+   "address": "Via delle Imprese 3, Milano",
+   "isDemo": true,
+   "status": "Approved",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Aerospazio"
+   ]
+  },
+  {
+   "id": "demo-company-4",
+   "address": "Via delle Imprese 4, Milano",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Servizi Avanzati",
+    "Automobilistico"
+   ],
+   "website": "https://demo-azienda-4.it",
+   "status": "Approved",
+   "isDemo": true,
+   "name": "Azienda Demo 4 - Servizi Avanzati",
+   "vatNumber": "IT12345678904"
+  },
+  {
+   "id": "demo-company-5",
+   "website": "https://demo-azienda-5.it",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Legno e Arredo"
+   ],
+   "name": "Azienda Demo 5 - ICT e Digitale",
+   "vatNumber": "IT12345678905",
+   "status": "Approved",
+   "address": "Via delle Imprese 5, Milano",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z"
+  },
+  {
+   "id": "demo-company-6",
+   "status": "Approved",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "address": "Via delle Imprese 6, Milano",
+   "name": "Azienda Demo 6 - Aerospazio",
+   "vatNumber": "IT12345678906",
+   "website": "https://demo-azienda-6.it",
+   "sectorIds": [
+    "Aerospazio",
+    "Alimentare"
+   ]
+  },
+  {
+   "id": "demo-company-7",
+   "status": "Approved",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "address": "Via delle Imprese 7, Milano",
+   "isDemo": true,
+   "name": "Azienda Demo 7 - Edilizia e Materiali",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Chimica e Farmaceutica"
+   ],
+   "vatNumber": "IT12345678907",
+   "website": "https://demo-azienda-7.it"
+  },
+  {
+   "id": "demo-company-8",
+   "name": "Azienda Demo 8 - Alimentare",
+   "isDemo": true,
+   "vatNumber": "IT12345678908",
+   "sectorIds": [
+    "Alimentare",
+    "ICT e Digitale"
+   ],
+   "address": "Via delle Imprese 8, Milano",
+   "status": "Approved",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "website": "https://demo-azienda-8.it"
+  },
+  {
+   "id": "demo-company-9",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "status": "Approved",
+   "website": "https://demo-azienda-9.it",
+   "name": "Azienda Demo 9 - Chimica e Farmaceutica",
+   "vatNumber": "IT12345678909",
+   "address": "Via delle Imprese 9, Milano",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Turismo e Beni Culturali"
+   ]
+  }
+ ],
+ "institutes": [
+  {
+   "id": "PiLHqQwFcaMepXup9xhInT7kU0e2",
+   "name": "franco franchi",
+   "status": "Approved",
+   "email": "uniitaliasrl@gmail.com"
+  },
+  {
+   "id": "S8SfipO3xhPrelmoSnlrYnoJVcf1",
+   "createdAt": "2026-03-24T08:19:34.939Z",
+   "sectorIds": [
+    "Automobilistico",
+    "Turismo e Beni Culturali",
+    "ICT e Digitale",
+    "Energia e Ambiente",
+    "Chimica e Farmaceutica",
+    "Meccanica e Meccatronica",
+    "Moda e Tessile",
+    "Legno e Arredo",
+    "Edilizia e Materiali"
+   ],
+   "types": [
+    "Agricoltura e Sviluppo Rurale (Professionale)",
+    "Liceo Artistico",
+    "Enogastronomia e Ospitalità Alberghiera",
+    "Industria e Artigianato per il Made in Italy",
+    "Grafica e Comunicazione",
+    "Costruzioni, Ambiente e Territorio (CAT)",
+    "Liceo Classico",
+    "Agraria, Agroalimentare e Agroindustria",
+    "Meccanica, Meccatronica ed Energia",
+    "Servizi Commerciali",
+    "Liceo Scientifico (Scienze Applicate)",
+    "Arti Ausiliarie Sanitarie: Odontotecnico",
+    "Liceo Musicale e Coreutico",
+    "Liceo delle Scienze Umane",
+    "Arti Ausiliarie Sanitarie: Ottico",
+    "Pesca Commerciale e Produzioni Ittiche",
+    "Servizi per la Sanità e l'Assistenza Sociale",
+    "Manutenzione e Assistenza Tecnica",
+    "Liceo delle Scienze Umane (Economico-Sociale)",
+    "Sistema Moda",
+    "Trasporti e Logistica",
+    "Amministrazione, Finanza e Marketing (AFM)"
+   ],
+   "email": "uniitaliasrl+1@gmail.com",
+   "status": "Approved",
+   "name": "ciccinicicci"
+  },
+  {
+   "id": "demo-institute-1",
+   "name": "Istituto Demo 1 - Liceo delle Scienze Umane",
+   "isDemo": true,
+   "status": "Approved",
+   "type": "Liceo delle Scienze Umane",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "address": "Piazza della Scuola 1, Roma"
+  },
+  {
+   "id": "demo-institute-10",
+   "status": "Approved",
+   "name": "Istituto Demo 10 - Liceo Classico",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "address": "Piazza della Scuola 10, Roma",
+   "type": "Liceo Classico",
+   "isDemo": true
+  },
+  {
+   "id": "demo-institute-2",
+   "name": "Istituto Demo 2 - Liceo Musicale e Coreutico",
+   "type": "Liceo Musicale e Coreutico",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "status": "Approved",
+   "address": "Piazza della Scuola 2, Roma"
+  },
+  {
+   "id": "demo-institute-3",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "status": "Approved",
+   "isDemo": true,
+   "address": "Piazza della Scuola 3, Roma",
+   "type": "Liceo Scientifico",
+   "name": "Istituto Demo 3 - Liceo Scientifico"
+  },
+  {
+   "id": "demo-institute-4",
+   "status": "Approved",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "type": "Liceo Artistico",
+   "name": "Istituto Demo 4 - Liceo Artistico",
+   "address": "Piazza della Scuola 4, Roma"
+  },
+  {
+   "id": "demo-institute-5",
+   "type": "Istituto Tecnico Tecnologico",
+   "name": "Istituto Demo 5 - Istituto Tecnico Tecnologico",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "status": "Approved",
+   "address": "Piazza della Scuola 5, Roma"
+  },
+  {
+   "id": "demo-institute-6",
+   "address": "Piazza della Scuola 6, Roma",
+   "status": "Approved",
+   "isDemo": true,
+   "name": "Istituto Demo 6 - Istituto Professionale Servizi",
+   "type": "Istituto Professionale Servizi",
+   "createdAt": "2026-02-10T17:35:03.372Z"
+  },
+  {
+   "id": "demo-institute-7",
+   "status": "Approved",
+   "address": "Piazza della Scuola 7, Roma",
+   "isDemo": true,
+   "type": "Liceo delle Scienze Umane",
+   "name": "Istituto Demo 7 - Liceo delle Scienze Umane",
+   "createdAt": "2026-02-10T17:35:03.372Z"
+  },
+  {
+   "id": "demo-institute-8",
+   "name": "Istituto Demo 8 - Liceo Classico",
+   "type": "Liceo Classico",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "status": "Approved",
+   "address": "Piazza della Scuola 8, Roma"
+  },
+  {
+   "id": "demo-institute-9",
+   "address": "Piazza della Scuola 9, Roma",
+   "status": "Approved",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Istituto Demo 9 - Istituto Professionale Servizi",
+   "type": "Istituto Professionale Servizi"
+  },
+  {
+   "id": "ilJJrcuIn7Zz98NEeLkwyM53rdJ2",
+   "name": "istituto bolletta",
+   "email": "bolletteadelini@gmail.com",
+   "types": [
+    "Agricoltura e Sviluppo Rurale (Professionale)",
+    "Liceo Artistico",
+    "Enogastronomia e Ospitalità Alberghiera",
+    "Industria e Artigianato per il Made in Italy",
+    "Grafica e Comunicazione",
+    "Costruzioni, Ambiente e Territorio (CAT)",
+    "Liceo Classico",
+    "Agraria, Agroalimentare e Agroindustria",
+    "Servizi per la Sanità e l'Assistenza Sociale",
+    "Manutenzione e Assistenza Tecnica",
+    "Meccanica, Meccatronica ed Energia",
+    "Servizi Commerciali",
+    "Liceo Scientifico (Scienze Applicate)",
+    "Arti Ausiliarie Sanitarie: Odontotecnico",
+    "Liceo Musicale e Coreutico",
+    "Liceo delle Scienze Umane",
+    "Arti Ausiliarie Sanitarie: Ottico",
+    "Pesca Commerciale e Produzioni Ittiche"
+   ],
+   "createdAt": "2026-02-26T14:09:15.951Z",
+   "sectorIds": [
+    "Automobilistico",
+    "Edilizia e Materiali",
+    "Aerospazio",
+    "Legno e Arredo",
+    "Turismo e Beni Culturali",
+    "ICT e Digitale",
+    "Moda e Tessile",
+    "Logistica e Trasporti",
+    "Servizi Avanzati",
+    "Energia e Ambiente"
+   ],
+   "status": "Approved"
+  },
+  {
+   "id": "miG9YfvdgCbvDHGTyHKDE28gwRh1",
+   "name": "Prova Istituto",
+   "status": "Approved",
+   "email": "provaistituto@gmail.com",
+   "createdAt": "2026-03-10T17:12:44.467Z",
+   "sectorIds": [
+    "Automobilistico",
+    "Edilizia e Materiali",
+    "Aerospazio",
+    "Servizi Avanzati",
+    "Legno e Arredo",
+    "Turismo e Beni Culturali",
+    "ICT e Digitale"
+   ],
+   "types": [
+    "Agricoltura e Sviluppo Rurale (Professionale)",
+    "Liceo Artistico",
+    "Pesca Commerciale e Produzioni Ittiche",
+    "Arti Ausiliarie Sanitarie: Ottico",
+    "Enogastronomia e Ospitalità Alberghiera",
+    "Liceo delle Scienze Umane",
+    "Industria e Artigianato per il Made in Italy",
+    "Liceo Musicale e Coreutico",
+    "Grafica e Comunicazione",
+    "Arti Ausiliarie Sanitarie: Odontotecnico"
+   ]
+  }
+ ],
+ "chats": [
+  {
+   "id": "AuWZiLBbYisDicaoshLS",
+   "messages": [
+    "Sistema: Conversazione avviata per interesse professionale.",
+    "alphadeltasrl@gmail.com: ciao"
+   ],
+   "updatedAt": "2026-02-23T16:28:23.537Z",
+   "lastSenderId": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "instituteId": "demo-institute-10",
+   "createdAt": "2026-02-23T16:28:15.174Z",
+   "companyId": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "lastMessage": "ciao",
+   "studentCVId": "demo-cv-10-1",
+   "lastMessageTime": "2026-03-24T08:24:24.489Z"
+  },
+  {
+   "id": "hkoZEn180QcpQ4KkSOmX",
+   "updatedAt": "2026-02-19T17:13:19.522Z",
+   "instituteId": "demo-institute-1",
+   "studentCVId": "demo-cv-1-1",
+   "createdAt": "2026-02-19T17:13:08.625Z",
+   "messages": [
+    "Sistema: Conversazione avviata per interesse professionale.",
+    "alphadeltasrl@gmail.com: mi interessa"
+   ],
+   "companyId": "MrrCqChAh4MhBFWAFnh87XDoTef2"
+  },
+  {
+   "id": "usDncqhHqjSU0KmIEDL5",
+   "createdAt": "2026-04-08T03:25:55.551Z",
+   "messages": [
+    "Sistema: Conversazione avviata per interesse professionale."
+   ],
+   "companyId": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "instituteId": "demo-institute-3",
+   "updatedAt": "2026-04-08T03:25:55.551Z",
+   "studentCVId": "demo-cv-3-1"
+  }
+ ],
+ "sectors": [
+  {
+   "id": "3FKdqyguDrZWyhzI3GCj",
+   "name": "Automobilistico"
+  },
+  {
+   "id": "BEvJVLV87ru8TWLb3yan",
+   "name": "Edilizia e Materiali"
+  },
+  {
+   "id": "EUXHrambdiGmmwWus7sU",
+   "name": "Aerospazio"
+  },
+  {
+   "id": "Rj9b9RFJii9UH1eEI1Ow",
+   "name": "Turismo e Beni Culturali"
+  },
+  {
+   "id": "T51cuiSquVjyCWWhYL8I",
+   "name": "Legno e Arredo"
+  },
+  {
+   "id": "VwGAhJIq6pi2V1dECbRN",
+   "name": "Servizi Avanzati"
+  },
+  {
+   "id": "YyEdn1eSLQaVt5W5hd0x",
+   "name": "ICT e Digitale"
+  },
+  {
+   "id": "dujGppSBBcZJY4dDhRKN",
+   "name": "Moda e Tessile"
+  },
+  {
+   "id": "gFrmz36z1pXQzUcozLnM",
+   "name": "Logistica e Trasporti"
+  },
+  {
+   "id": "iGixdoehQhL6cS4MJ25B",
+   "name": "Energia e Ambiente"
+  },
+  {
+   "id": "kBzLv1Ipd6YDqcKW3556",
+   "name": "Meccanica e Meccatronica"
+  },
+  {
+   "id": "oChug1xmugAGkIVHHkUN",
+   "name": "Alimentare"
+  },
+  {
+   "id": "vDMl8U5xB8S4rAUX4Ep0",
+   "name": "Chimica e Farmaceutica"
+  }
+ ],
+ "instituteTypes": [
+  {
+   "id": "8xUQvdg7jKQNYTstTiP0",
+   "name": "Agricoltura e Sviluppo Rurale (Professionale)"
+  },
+  {
+   "id": "9bQ6P9gKrlKnBogOuWNM",
+   "name": "Pesca Commerciale e Produzioni Ittiche"
+  },
+  {
+   "id": "9m7JUPb5GtHLbeYJe4wa",
+   "name": "Liceo Artistico"
+  },
+  {
+   "id": "AFZhWjpQAnA0hz0ApwA7",
+   "name": "Arti Ausiliarie Sanitarie: Ottico"
+  },
+  {
+   "id": "AflQkpdu6exZyRxIJWYM",
+   "name": "Enogastronomia e Ospitalità Alberghiera"
+  },
+  {
+   "id": "BgozOklHrX3apVJsaLke",
+   "name": "Liceo delle Scienze Umane"
+  },
+  {
+   "id": "DMKMqEI6Dgg0RWL7Tdv5",
+   "name": "Industria e Artigianato per il Made in Italy"
+  },
+  {
+   "id": "HsoojYqGZRIb5ZmJI3ba",
+   "name": "Liceo Musicale e Coreutico"
+  },
+  {
+   "id": "IFNMBHzeX1aLwJ6laHXj",
+   "name": "Grafica e Comunicazione"
+  },
+  {
+   "id": "J8fdP8PE8QmydFwfyThx",
+   "name": "Arti Ausiliarie Sanitarie: Odontotecnico"
+  },
+  {
+   "id": "JNIHl3DvNEI9hRud7rmg",
+   "name": "Costruzioni, Ambiente e Territorio (CAT)"
+  },
+  {
+   "id": "KV5p5hDcci6HTAESj06A",
+   "name": "Liceo Scientifico (Scienze Applicate)"
+  },
+  {
+   "id": "MnUv9qxShIHR1BDf95oX",
+   "name": "Liceo Classico"
+  },
+  {
+   "id": "OkzN6FfXxdFY7J471X98",
+   "name": "Servizi Commerciali"
+  },
+  {
+   "id": "TJ4gUWHxxwN7eqSOyfdC",
+   "name": "Agraria, Agroalimentare e Agroindustria"
+  },
+  {
+   "id": "TV4to7Ym3d9a1Urme0Ph",
+   "name": "Meccanica, Meccatronica ed Energia"
+  },
+  {
+   "id": "YWBV4aPx4RHCS0G9G1dX",
+   "name": "Servizi per la Sanità e l'Assistenza Sociale"
+  },
+  {
+   "id": "ZxfiDI492o76KQ7j8O34",
+   "name": "Manutenzione e Assistenza Tecnica"
+  },
+  {
+   "id": "c1orjtJk0TR3QoVPcpo8",
+   "name": "Sistema Moda"
+  },
+  {
+   "id": "cHdPnr35MPbtFApzBcrG",
+   "name": "Liceo delle Scienze Umane (Economico-Sociale)"
+  },
+  {
+   "id": "deOloX5KPyKdNPIP6ChL",
+   "name": "Trasporti e Logistica"
+  },
+  {
+   "id": "fQ2u2dUu9aIkcBWrQspK",
+   "name": "Amministrazione, Finanza e Marketing (AFM)"
+  },
+  {
+   "id": "gFjUYvWu6wHQJ56ASBpn",
+   "name": "Informatica e Telecomunicazioni"
+  },
+  {
+   "id": "iXpH3h46ig2U6w6QOHL4",
+   "name": "Elettronica ed Elettrotecnica"
+  },
+  {
+   "id": "oRYibVLFqS9JWXalqBUW",
+   "name": "Gestione delle Acque e Risanamento Ambientale"
+  },
+  {
+   "id": "scmYYAJOZnSQvo9iRCpn",
+   "name": "Liceo Scientifico (Tradizionale)"
+  },
+  {
+   "id": "tLsJRqiIoxXScLZdo16j",
+   "name": "Servizi Culturali e dello Spettacolo"
+  },
+  {
+   "id": "u0G0qfsvo8rhfzaNZvUT",
+   "name": "Liceo Scientifico (Indirizzo Sportivo)"
+  },
+  {
+   "id": "uxRUn1WnfkJ5boK1sTPz",
+   "name": "Liceo Linguistico"
+  },
+  {
+   "id": "xiFc97qlvYOXKmkCzTVS",
+   "name": "Chimica, Materiali e Biotecnologie"
+  },
+  {
+   "id": "yJXHHqgli5hqiF1CYzBU",
+   "name": "Turismo (Tecnico)"
+  }
+ ],
+ "blogPosts": [],
+ "config": [],
+ "notifications": [],
+ "studentCVs": [
+  {
+   "id": "lc8fHW4VymhPdr45h1Sv",
+   "cvInformation": "",
+   "name": "frachino fraco",
+   "createdAt": "2026-03-24T08:22:04.637Z",
+   "isDemo": false,
+   "class": "5c meccanica",
+   "instituteId": "S8SfipO3xhPrelmoSnlrYnoJVcf1",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Energia e Ambiente",
+    "Alimentare",
+    "Meccanica e Meccatronica",
+    "Turismo e Beni Culturali",
+    "Aerospazio",
+    "Edilizia e Materiali",
+    "Legno e Arredo"
+   ],
+   "_instituteId": "S8SfipO3xhPrelmoSnlrYnoJVcf1"
+  },
+  {
+   "id": "demo-cv-1-1",
+   "cvInformation": "Profilo di prova per lo studente 11. Eccellenti capacità in Logistica e Trasporti e Edilizia e Materiali.",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "name": "Studente Demo 11",
+   "instituteId": "demo-institute-1",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Edilizia e Materiali"
+   ],
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-10",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 110. Eccellenti capacità in Legno e Arredo e Edilizia e Materiali.",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Edilizia e Materiali"
+   ],
+   "isDemo": true,
+   "name": "Studente Demo 110",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-1",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-2",
+   "sectorIds": [
+    "Moda e Tessile",
+    "Automobilistico"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-1",
+   "name": "Studente Demo 12",
+   "cvInformation": "Profilo di prova per lo studente 12. Eccellenti capacità in Moda e Tessile e Automobilistico.",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-3",
+   "sectorIds": [
+    "Automobilistico",
+    "Alimentare"
+   ],
+   "instituteId": "demo-institute-1",
+   "name": "Studente Demo 13",
+   "cvInformation": "Profilo di prova per lo studente 13. Eccellenti capacità in Automobilistico e Alimentare.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-4",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Alimentare",
+    "Turismo e Beni Culturali"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 14. Eccellenti capacità in Alimentare e Turismo e Beni Culturali.",
+   "instituteId": "demo-institute-1",
+   "name": "Studente Demo 14",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-5",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Energia e Ambiente"
+   ],
+   "instituteId": "demo-institute-1",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 15",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 15. Eccellenti capacità in ICT e Digitale e Energia e Ambiente.",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-6",
+   "instituteId": "demo-institute-1",
+   "cvInformation": "Profilo di prova per lo studente 16. Eccellenti capacità in Turismo e Beni Culturali e Legno e Arredo.",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Legno e Arredo"
+   ],
+   "class": "5A Informatica",
+   "name": "Studente Demo 16",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-7",
+   "name": "Studente Demo 17",
+   "sectorIds": [
+    "Aerospazio",
+    "Alimentare"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-1",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 17. Eccellenti capacità in Aerospazio e Alimentare.",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-8",
+   "name": "Studente Demo 18",
+   "sectorIds": [
+    "Automobilistico",
+    "Alimentare"
+   ],
+   "instituteId": "demo-institute-1",
+   "cvInformation": "Profilo di prova per lo studente 18. Eccellenti capacità in Automobilistico e Alimentare.",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-1-9",
+   "isDemo": true,
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Automobilistico"
+   ],
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 19. Eccellenti capacità in Meccanica e Meccatronica e Automobilistico.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 19",
+   "instituteId": "demo-institute-1",
+   "_instituteId": "demo-institute-1"
+  },
+  {
+   "id": "demo-cv-10-1",
+   "instituteId": "demo-institute-10",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 101. Eccellenti capacità in Legno e Arredo e Aerospazio.",
+   "name": "Studente Demo 101",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "sectorIds": [
+    "Legno e Arredo",
+    "Aerospazio"
+   ],
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-10",
+   "isDemo": true,
+   "sectorIds": [
+    "Energia e Ambiente",
+    "Alimentare"
+   ],
+   "instituteId": "demo-institute-10",
+   "name": "Studente Demo 1010",
+   "cvInformation": "Profilo di prova per lo studente 1010. Eccellenti capacità in Energia e Ambiente e Alimentare.",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-2",
+   "cvInformation": "Profilo di prova per lo studente 102. Eccellenti capacità in Chimica e Farmaceutica e Alimentare.",
+   "instituteId": "demo-institute-10",
+   "name": "Studente Demo 102",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Alimentare"
+   ],
+   "class": "5A Informatica",
+   "isDemo": true,
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-3",
+   "cvInformation": "Profilo di prova per lo studente 103. Eccellenti capacità in Aerospazio e Meccanica e Meccatronica.",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-10",
+   "class": "5A Informatica",
+   "name": "Studente Demo 103",
+   "sectorIds": [
+    "Aerospazio",
+    "Meccanica e Meccatronica"
+   ],
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-4",
+   "sectorIds": [
+    "Automobilistico",
+    "ICT e Digitale"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "instituteId": "demo-institute-10",
+   "name": "Studente Demo 104",
+   "cvInformation": "Profilo di prova per lo studente 104. Eccellenti capacità in Automobilistico e ICT e Digitale.",
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-5",
+   "sectorIds": [
+    "Servizi Avanzati",
+    "Energia e Ambiente"
+   ],
+   "instituteId": "demo-institute-10",
+   "name": "Studente Demo 105",
+   "cvInformation": "Profilo di prova per lo studente 105. Eccellenti capacità in Servizi Avanzati e Energia e Ambiente.",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-6",
+   "name": "Studente Demo 106",
+   "instituteId": "demo-institute-10",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Aerospazio"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 106. Eccellenti capacità in Chimica e Farmaceutica e Aerospazio.",
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-7",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-10",
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Aerospazio"
+   ],
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 107",
+   "cvInformation": "Profilo di prova per lo studente 107. Eccellenti capacità in Meccanica e Meccatronica e Aerospazio.",
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-8",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-10",
+   "cvInformation": "Profilo di prova per lo studente 108. Eccellenti capacità in Aerospazio e Chimica e Farmaceutica.",
+   "name": "Studente Demo 108",
+   "sectorIds": [
+    "Aerospazio",
+    "Chimica e Farmaceutica"
+   ],
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-10-9",
+   "instituteId": "demo-institute-10",
+   "cvInformation": "Profilo di prova per lo studente 109. Eccellenti capacità in Automobilistico e Chimica e Farmaceutica.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "name": "Studente Demo 109",
+   "sectorIds": [
+    "Automobilistico",
+    "Chimica e Farmaceutica"
+   ],
+   "isDemo": true,
+   "_instituteId": "demo-institute-10"
+  },
+  {
+   "id": "demo-cv-2-1",
+   "isDemo": true,
+   "instituteId": "demo-institute-2",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Automobilistico"
+   ],
+   "name": "Studente Demo 21",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 21. Eccellenti capacità in Meccanica e Meccatronica e Automobilistico.",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-10",
+   "sectorIds": [
+    "Aerospazio",
+    "Logistica e Trasporti"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 210. Eccellenti capacità in Aerospazio e Logistica e Trasporti.",
+   "name": "Studente Demo 210",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-2",
+   "isDemo": true,
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-2",
+   "sectorIds": [
+    "Energia e Ambiente",
+    "Edilizia e Materiali"
+   ],
+   "name": "Studente Demo 22",
+   "cvInformation": "Profilo di prova per lo studente 22. Eccellenti capacità in Energia e Ambiente e Edilizia e Materiali.",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-2",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-3",
+   "name": "Studente Demo 23",
+   "isDemo": true,
+   "instituteId": "demo-institute-2",
+   "cvInformation": "Profilo di prova per lo studente 23. Eccellenti capacità in Edilizia e Materiali e Chimica e Farmaceutica.",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Chimica e Farmaceutica"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-4",
+   "name": "Studente Demo 24",
+   "cvInformation": "Profilo di prova per lo studente 24. Eccellenti capacità in Logistica e Trasporti e Turismo e Beni Culturali.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "instituteId": "demo-institute-2",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Turismo e Beni Culturali"
+   ],
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-5",
+   "cvInformation": "Profilo di prova per lo studente 25. Eccellenti capacità in Chimica e Farmaceutica e Automobilistico.",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Automobilistico"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-2",
+   "name": "Studente Demo 25",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-6",
+   "sectorIds": [
+    "Servizi Avanzati",
+    "Edilizia e Materiali"
+   ],
+   "instituteId": "demo-institute-2",
+   "isDemo": true,
+   "name": "Studente Demo 26",
+   "cvInformation": "Profilo di prova per lo studente 26. Eccellenti capacità in Servizi Avanzati e Edilizia e Materiali.",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-7",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 27. Eccellenti capacità in Turismo e Beni Culturali e Aerospazio.",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Aerospazio"
+   ],
+   "instituteId": "demo-institute-2",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 27",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-8",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 28. Eccellenti capacità in Energia e Ambiente e Edilizia e Materiali.",
+   "sectorIds": [
+    "Energia e Ambiente",
+    "Edilizia e Materiali"
+   ],
+   "name": "Studente Demo 28",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-2",
+   "isDemo": true,
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-2-9",
+   "cvInformation": "Profilo di prova per lo studente 29. Eccellenti capacità in Aerospazio e Logistica e Trasporti.",
+   "name": "Studente Demo 29",
+   "instituteId": "demo-institute-2",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "sectorIds": [
+    "Aerospazio",
+    "Logistica e Trasporti"
+   ],
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-2"
+  },
+  {
+   "id": "demo-cv-3-1",
+   "sectorIds": [
+    "Aerospazio",
+    "ICT e Digitale"
+   ],
+   "isDemo": true,
+   "instituteId": "demo-institute-3",
+   "name": "Studente Demo 31",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 31. Eccellenti capacità in Aerospazio e ICT e Digitale.",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-10",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "name": "Studente Demo 310",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-3",
+   "cvInformation": "Profilo di prova per lo studente 310. Eccellenti capacità in Logistica e Trasporti e Servizi Avanzati.",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Servizi Avanzati"
+   ],
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-2",
+   "cvInformation": "Profilo di prova per lo studente 32. Eccellenti capacità in Turismo e Beni Culturali e Alimentare.",
+   "instituteId": "demo-institute-3",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Alimentare"
+   ],
+   "isDemo": true,
+   "name": "Studente Demo 32",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-3",
+   "cvInformation": "Profilo di prova per lo studente 33. Eccellenti capacità in Meccanica e Meccatronica e Turismo e Beni Culturali.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 33",
+   "instituteId": "demo-institute-3",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Turismo e Beni Culturali"
+   ],
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-4",
+   "name": "Studente Demo 34",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 34. Eccellenti capacità in Aerospazio e Edilizia e Materiali.",
+   "sectorIds": [
+    "Aerospazio",
+    "Edilizia e Materiali"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-3",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-5",
+   "cvInformation": "Profilo di prova per lo studente 35. Eccellenti capacità in Moda e Tessile e Edilizia e Materiali.",
+   "instituteId": "demo-institute-3",
+   "sectorIds": [
+    "Moda e Tessile",
+    "Edilizia e Materiali"
+   ],
+   "class": "5A Informatica",
+   "name": "Studente Demo 35",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-6",
+   "cvInformation": "Profilo di prova per lo studente 36. Eccellenti capacità in Legno e Arredo e Aerospazio.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-3",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "name": "Studente Demo 36",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Aerospazio"
+   ],
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-7",
+   "cvInformation": "Profilo di prova per lo studente 37. Eccellenti capacità in Automobilistico e Meccanica e Meccatronica.",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-3",
+   "sectorIds": [
+    "Automobilistico",
+    "Meccanica e Meccatronica"
+   ],
+   "name": "Studente Demo 37",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-8",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 38. Eccellenti capacità in Aerospazio e Edilizia e Materiali.",
+   "instituteId": "demo-institute-3",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Aerospazio",
+    "Edilizia e Materiali"
+   ],
+   "name": "Studente Demo 38",
+   "isDemo": true,
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-3-9",
+   "name": "Studente Demo 39",
+   "instituteId": "demo-institute-3",
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Logistica e Trasporti"
+   ],
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 39. Eccellenti capacità in Meccanica e Meccatronica e Logistica e Trasporti.",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-3"
+  },
+  {
+   "id": "demo-cv-4-1",
+   "name": "Studente Demo 41",
+   "instituteId": "demo-institute-4",
+   "isDemo": true,
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Servizi Avanzati"
+   ],
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 41. Eccellenti capacità in Meccanica e Meccatronica e Servizi Avanzati.",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-10",
+   "name": "Studente Demo 410",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 410. Eccellenti capacità in Edilizia e Materiali e ICT e Digitale.",
+   "instituteId": "demo-institute-4",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "ICT e Digitale"
+   ],
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-2",
+   "name": "Studente Demo 42",
+   "isDemo": true,
+   "sectorIds": [
+    "ICT e Digitale",
+    "Edilizia e Materiali"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-4",
+   "cvInformation": "Profilo di prova per lo studente 42. Eccellenti capacità in ICT e Digitale e Edilizia e Materiali.",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-3",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "instituteId": "demo-institute-4",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Alimentare",
+    "Servizi Avanzati"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 43. Eccellenti capacità in Alimentare e Servizi Avanzati.",
+   "name": "Studente Demo 43",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-4",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 44. Eccellenti capacità in Chimica e Farmaceutica e ICT e Digitale.",
+   "name": "Studente Demo 44",
+   "instituteId": "demo-institute-4",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "ICT e Digitale"
+   ],
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-5",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 45. Eccellenti capacità in Moda e Tessile e ICT e Digitale.",
+   "sectorIds": [
+    "Moda e Tessile",
+    "ICT e Digitale"
+   ],
+   "name": "Studente Demo 45",
+   "isDemo": true,
+   "instituteId": "demo-institute-4",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-6",
+   "name": "Studente Demo 46",
+   "cvInformation": "Profilo di prova per lo studente 46. Eccellenti capacità in Alimentare e Meccanica e Meccatronica.",
+   "sectorIds": [
+    "Alimentare",
+    "Meccanica e Meccatronica"
+   ],
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "instituteId": "demo-institute-4",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-7",
+   "name": "Studente Demo 47",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-4",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 47. Eccellenti capacità in Meccanica e Meccatronica e Chimica e Farmaceutica.",
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Chimica e Farmaceutica"
+   ],
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-8",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 48. Eccellenti capacità in Chimica e Farmaceutica e ICT e Digitale.",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "ICT e Digitale"
+   ],
+   "instituteId": "demo-institute-4",
+   "name": "Studente Demo 48",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-4-9",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Moda e Tessile",
+    "Automobilistico"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 49. Eccellenti capacità in Moda e Tessile e Automobilistico.",
+   "instituteId": "demo-institute-4",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 49",
+   "_instituteId": "demo-institute-4"
+  },
+  {
+   "id": "demo-cv-5-1",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 51. Eccellenti capacità in Automobilistico e Aerospazio.",
+   "instituteId": "demo-institute-5",
+   "class": "5A Informatica",
+   "name": "Studente Demo 51",
+   "sectorIds": [
+    "Automobilistico",
+    "Aerospazio"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-10",
+   "name": "Studente Demo 510",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Energia e Ambiente",
+    "Automobilistico"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 510. Eccellenti capacità in Energia e Ambiente e Automobilistico.",
+   "instituteId": "demo-institute-5",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-2",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-5",
+   "cvInformation": "Profilo di prova per lo studente 52. Eccellenti capacità in Automobilistico e Logistica e Trasporti.",
+   "sectorIds": [
+    "Automobilistico",
+    "Logistica e Trasporti"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 52",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-3",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 53. Eccellenti capacità in Chimica e Farmaceutica e Logistica e Trasporti.",
+   "isDemo": true,
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Logistica e Trasporti"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-5",
+   "name": "Studente Demo 53",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-4",
+   "name": "Studente Demo 54",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 54. Eccellenti capacità in Servizi Avanzati e Chimica e Farmaceutica.",
+   "instituteId": "demo-institute-5",
+   "sectorIds": [
+    "Servizi Avanzati",
+    "Chimica e Farmaceutica"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-5",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 55. Eccellenti capacità in Edilizia e Materiali e Chimica e Farmaceutica.",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Chimica e Farmaceutica"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-5",
+   "name": "Studente Demo 55",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-6",
+   "instituteId": "demo-institute-5",
+   "isDemo": true,
+   "sectorIds": [
+    "Energia e Ambiente",
+    "Servizi Avanzati"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "name": "Studente Demo 56",
+   "cvInformation": "Profilo di prova per lo studente 56. Eccellenti capacità in Energia e Ambiente e Servizi Avanzati.",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-7",
+   "instituteId": "demo-institute-5",
+   "name": "Studente Demo 57",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Aerospazio"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 57. Eccellenti capacità in Logistica e Trasporti e Aerospazio.",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-8",
+   "instituteId": "demo-institute-5",
+   "isDemo": true,
+   "sectorIds": [
+    "Aerospazio",
+    "Servizi Avanzati"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 58. Eccellenti capacità in Aerospazio e Servizi Avanzati.",
+   "class": "5A Informatica",
+   "name": "Studente Demo 58",
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-5-9",
+   "name": "Studente Demo 59",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-5",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Automobilistico"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 59. Eccellenti capacità in Chimica e Farmaceutica e Automobilistico.",
+   "isDemo": true,
+   "_instituteId": "demo-institute-5"
+  },
+  {
+   "id": "demo-cv-6-1",
+   "cvInformation": "Profilo di prova per lo studente 61. Eccellenti capacità in Aerospazio e Alimentare.",
+   "sectorIds": [
+    "Aerospazio",
+    "Alimentare"
+   ],
+   "instituteId": "demo-institute-6",
+   "name": "Studente Demo 61",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-10",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Automobilistico"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-6",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 610. Eccellenti capacità in ICT e Digitale e Automobilistico.",
+   "name": "Studente Demo 610",
+   "isDemo": true,
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-2",
+   "sectorIds": [
+    "Alimentare",
+    "Legno e Arredo"
+   ],
+   "isDemo": true,
+   "name": "Studente Demo 62",
+   "cvInformation": "Profilo di prova per lo studente 62. Eccellenti capacità in Alimentare e Legno e Arredo.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-6",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-3",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 63. Eccellenti capacità in Alimentare e Energia e Ambiente.",
+   "sectorIds": [
+    "Alimentare",
+    "Energia e Ambiente"
+   ],
+   "isDemo": true,
+   "instituteId": "demo-institute-6",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 63",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-4",
+   "cvInformation": "Profilo di prova per lo studente 64. Eccellenti capacità in Automobilistico e Alimentare.",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 64",
+   "isDemo": true,
+   "sectorIds": [
+    "Automobilistico",
+    "Alimentare"
+   ],
+   "instituteId": "demo-institute-6",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-5",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 65. Eccellenti capacità in Aerospazio e ICT e Digitale.",
+   "name": "Studente Demo 65",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "instituteId": "demo-institute-6",
+   "sectorIds": [
+    "Aerospazio",
+    "ICT e Digitale"
+   ],
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-6",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 66",
+   "instituteId": "demo-institute-6",
+   "sectorIds": [
+    "Automobilistico",
+    "Turismo e Beni Culturali"
+   ],
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 66. Eccellenti capacità in Automobilistico e Turismo e Beni Culturali.",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-7",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-6",
+   "cvInformation": "Profilo di prova per lo studente 67. Eccellenti capacità in ICT e Digitale e Meccanica e Meccatronica.",
+   "name": "Studente Demo 67",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Meccanica e Meccatronica"
+   ],
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-8",
+   "isDemo": true,
+   "sectorIds": [
+    "Legno e Arredo",
+    "Chimica e Farmaceutica"
+   ],
+   "name": "Studente Demo 68",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 68. Eccellenti capacità in Legno e Arredo e Chimica e Farmaceutica.",
+   "instituteId": "demo-institute-6",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-6-9",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 69. Eccellenti capacità in Automobilistico e Logistica e Trasporti.",
+   "instituteId": "demo-institute-6",
+   "sectorIds": [
+    "Automobilistico",
+    "Logistica e Trasporti"
+   ],
+   "isDemo": true,
+   "name": "Studente Demo 69",
+   "_instituteId": "demo-institute-6"
+  },
+  {
+   "id": "demo-cv-7-1",
+   "cvInformation": "Profilo di prova per lo studente 71. Eccellenti capacità in Chimica e Farmaceutica e Energia e Ambiente.",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Energia e Ambiente"
+   ],
+   "name": "Studente Demo 71",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-7",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-10",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Chimica e Farmaceutica"
+   ],
+   "instituteId": "demo-institute-7",
+   "name": "Studente Demo 710",
+   "cvInformation": "Profilo di prova per lo studente 710. Eccellenti capacità in Turismo e Beni Culturali e Chimica e Farmaceutica.",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-2",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Moda e Tessile"
+   ],
+   "isDemo": true,
+   "instituteId": "demo-institute-7",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 72. Eccellenti capacità in ICT e Digitale e Moda e Tessile.",
+   "name": "Studente Demo 72",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-3",
+   "isDemo": true,
+   "name": "Studente Demo 73",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Meccanica e Meccatronica",
+    "Edilizia e Materiali"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 73. Eccellenti capacità in Meccanica e Meccatronica e Edilizia e Materiali.",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-7",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-4",
+   "sectorIds": [
+    "Automobilistico",
+    "Alimentare"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 74. Eccellenti capacità in Automobilistico e Alimentare.",
+   "name": "Studente Demo 74",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-7",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-5",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 75",
+   "sectorIds": [
+    "Aerospazio",
+    "Alimentare"
+   ],
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 75. Eccellenti capacità in Aerospazio e Alimentare.",
+   "instituteId": "demo-institute-7",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-6",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 76",
+   "cvInformation": "Profilo di prova per lo studente 76. Eccellenti capacità in Legno e Arredo e Meccanica e Meccatronica.",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Meccanica e Meccatronica"
+   ],
+   "instituteId": "demo-institute-7",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-7",
+   "cvInformation": "Profilo di prova per lo studente 77. Eccellenti capacità in Chimica e Farmaceutica e Energia e Ambiente.",
+   "name": "Studente Demo 77",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Energia e Ambiente"
+   ],
+   "class": "5A Informatica",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-7",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-8",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Edilizia e Materiali"
+   ],
+   "instituteId": "demo-institute-7",
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 78",
+   "cvInformation": "Profilo di prova per lo studente 78. Eccellenti capacità in ICT e Digitale e Edilizia e Materiali.",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-7-9",
+   "isDemo": true,
+   "instituteId": "demo-institute-7",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 79. Eccellenti capacità in Edilizia e Materiali e Servizi Avanzati.",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Servizi Avanzati"
+   ],
+   "name": "Studente Demo 79",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-7"
+  },
+  {
+   "id": "demo-cv-8-1",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Legno e Arredo"
+   ],
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-8",
+   "isDemo": true,
+   "name": "Studente Demo 81",
+   "cvInformation": "Profilo di prova per lo studente 81. Eccellenti capacità in ICT e Digitale e Legno e Arredo.",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-10",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Automobilistico"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 810. Eccellenti capacità in Edilizia e Materiali e Automobilistico.",
+   "isDemo": true,
+   "name": "Studente Demo 810",
+   "instituteId": "demo-institute-8",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-2",
+   "instituteId": "demo-institute-8",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Automobilistico"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 82. Eccellenti capacità in Chimica e Farmaceutica e Automobilistico.",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "name": "Studente Demo 82",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-3",
+   "sectorIds": [
+    "Alimentare",
+    "Turismo e Beni Culturali"
+   ],
+   "isDemo": true,
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-8",
+   "cvInformation": "Profilo di prova per lo studente 83. Eccellenti capacità in Alimentare e Turismo e Beni Culturali.",
+   "name": "Studente Demo 83",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-4",
+   "name": "Studente Demo 84",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "Moda e Tessile"
+   ],
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-8",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 84. Eccellenti capacità in Edilizia e Materiali e Moda e Tessile.",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-5",
+   "name": "Studente Demo 85",
+   "cvInformation": "Profilo di prova per lo studente 85. Eccellenti capacità in Legno e Arredo e Chimica e Farmaceutica.",
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "instituteId": "demo-institute-8",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Chimica e Farmaceutica"
+   ],
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-6",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "sectorIds": [
+    "ICT e Digitale",
+    "Meccanica e Meccatronica"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 86. Eccellenti capacità in ICT e Digitale e Meccanica e Meccatronica.",
+   "name": "Studente Demo 86",
+   "instituteId": "demo-institute-8",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-7",
+   "instituteId": "demo-institute-8",
+   "sectorIds": [
+    "Servizi Avanzati",
+    "ICT e Digitale"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 87. Eccellenti capacità in Servizi Avanzati e ICT e Digitale.",
+   "name": "Studente Demo 87",
+   "isDemo": true,
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-8",
+   "cvInformation": "Profilo di prova per lo studente 88. Eccellenti capacità in Legno e Arredo e Edilizia e Materiali.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Edilizia e Materiali"
+   ],
+   "isDemo": true,
+   "name": "Studente Demo 88",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-8",
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-8-9",
+   "sectorIds": [
+    "Chimica e Farmaceutica",
+    "Energia e Ambiente"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 89. Eccellenti capacità in Chimica e Farmaceutica e Energia e Ambiente.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "name": "Studente Demo 89",
+   "instituteId": "demo-institute-8",
+   "class": "5A Informatica",
+   "isDemo": true,
+   "_instituteId": "demo-institute-8"
+  },
+  {
+   "id": "demo-cv-9-1",
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 91",
+   "isDemo": true,
+   "cvInformation": "Profilo di prova per lo studente 91. Eccellenti capacità in Turismo e Beni Culturali e Automobilistico.",
+   "sectorIds": [
+    "Turismo e Beni Culturali",
+    "Automobilistico"
+   ],
+   "class": "5A Informatica",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-10",
+   "instituteId": "demo-institute-9",
+   "cvInformation": "Profilo di prova per lo studente 910. Eccellenti capacità in Moda e Tessile e Chimica e Farmaceutica.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Moda e Tessile",
+    "Chimica e Farmaceutica"
+   ],
+   "class": "5A Informatica",
+   "name": "Studente Demo 910",
+   "isDemo": true,
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-2",
+   "cvInformation": "Profilo di prova per lo studente 92. Eccellenti capacità in Aerospazio e Alimentare.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Aerospazio",
+    "Alimentare"
+   ],
+   "isDemo": true,
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 92",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-3",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Legno e Arredo",
+    "Chimica e Farmaceutica"
+   ],
+   "instituteId": "demo-institute-9",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 93. Eccellenti capacità in Legno e Arredo e Chimica e Farmaceutica.",
+   "isDemo": true,
+   "name": "Studente Demo 93",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-4",
+   "cvInformation": "Profilo di prova per lo studente 94. Eccellenti capacità in Alimentare e Meccanica e Meccatronica.",
+   "isDemo": true,
+   "name": "Studente Demo 94",
+   "sectorIds": [
+    "Alimentare",
+    "Meccanica e Meccatronica"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "instituteId": "demo-institute-9",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-5",
+   "class": "5A Informatica",
+   "cvInformation": "Profilo di prova per lo studente 95. Eccellenti capacità in Logistica e Trasporti e Chimica e Farmaceutica.",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "sectorIds": [
+    "Logistica e Trasporti",
+    "Chimica e Farmaceutica"
+   ],
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 95",
+   "isDemo": true,
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-6",
+   "sectorIds": [
+    "Automobilistico",
+    "Edilizia e Materiali"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 96",
+   "cvInformation": "Profilo di prova per lo studente 96. Eccellenti capacità in Automobilistico e Edilizia e Materiali.",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-7",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "isDemo": true,
+   "sectorIds": [
+    "Automobilistico",
+    "Alimentare"
+   ],
+   "cvInformation": "Profilo di prova per lo studente 97. Eccellenti capacità in Automobilistico e Alimentare.",
+   "class": "5A Informatica",
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 97",
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-8",
+   "class": "5A Informatica",
+   "sectorIds": [
+    "Edilizia e Materiali",
+    "ICT e Digitale"
+   ],
+   "instituteId": "demo-institute-9",
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "cvInformation": "Profilo di prova per lo studente 98. Eccellenti capacità in Edilizia e Materiali e ICT e Digitale.",
+   "name": "Studente Demo 98",
+   "isDemo": true,
+   "_instituteId": "demo-institute-9"
+  },
+  {
+   "id": "demo-cv-9-9",
+   "instituteId": "demo-institute-9",
+   "name": "Studente Demo 99",
+   "cvInformation": "Profilo di prova per lo studente 99. Eccellenti capacità in Alimentare e Aerospazio.",
+   "isDemo": true,
+   "sectorIds": [
+    "Alimentare",
+    "Aerospazio"
+   ],
+   "createdAt": "2026-02-10T17:35:03.372Z",
+   "class": "5A Informatica",
+   "_instituteId": "demo-institute-9"
+  }
+ ],
+ "messages": [
+  {
+   "id": "UuEA2Ih61SVdNorrIOZS",
+   "senderRole": "Company",
+   "senderId": "MrrCqChAh4MhBFWAFnh87XDoTef2",
+   "createdAt": "2026-03-24T08:24:24.269Z",
+   "senderEmail": "alphadeltasrl@gmail.com",
+   "text": "ciao",
+   "_chatId": "AuWZiLBbYisDicaoshLS"
+  }
+ ]
+}
