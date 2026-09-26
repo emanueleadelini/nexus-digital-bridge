@@ -1,9 +1,10 @@
-# DNS da pubblicare su Aruba (pannello domini nexusdigitalbridge.it)
+# DNS pubblicati su Aruba (pannello domini nexusdigitalbridge.it)
 
-Senza questi record Gmail/Outlook rifiutano le email della piattaforma
-(postfix self-hosted). Le firma DKIM lato server è già attiva.
+STATO 2026-09-26 ~17:05 UTC: **SPF + DKIM + DMARC pubblicati e propagati**.
+Verifica mail reale: reset password verso Gmail accettato
+(`status=sent 250 2.0.0 OK` in `/var/log/mail.log`).
 
-## 1. SPF (obbligatorio)
+## 1. SPF (obbligatorio) — PUBBLICATO, propagato
 
 Tipo: **TXT**
 Nome/host: `@` (oppure vuoto — radice del dominio)
@@ -13,7 +14,7 @@ Valore:
 v=spf1 ip4:51.210.214.63 -all
 ```
 
-## 2. DKIM (obbligatorio)
+## 2. DKIM (obbligatorio) — PUBBLICATO, propagato
 
 Tipo: **TXT**
 Nome/host: `mail._domainkey`
@@ -28,7 +29,7 @@ v=DKIM1; h=sha256; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsfeJ1JqS
 Nel pannello OVH: IP `51.210.214.63` → reverse DNS `nexusdigitalbridge.it`
 (non bloccante con SPF/DKIM ok, ma aumenta la deliverability).
 
-## 4. DMARC (opzionale ma consigliato)
+## 4. DMARC (consigliato) — PUBBLICATO
 
 Tipo: **TXT**
 Nome/host: `_dmarc`

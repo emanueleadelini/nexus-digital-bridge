@@ -61,6 +61,10 @@ Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
 - SMTP risolto: **postfix già installato sull'host**, attivato e autorizzata
   subnet docker `172.16.0.0/12` in `mynetworks`; invio reale verificato
   (mail.log: accept). Fix formato MAIL_FROM (display name tra virgolette).
+- **Email RISOLTA 2026-09-26 ~17:05 UTC**: record DNS pubblicati su Aruba via
+  pannello web (browser bridge): SPF `@`, DKIM `mail._domainkey`, DMARC `_dmarc`.
+  Reset password di test verso Gmail accettato (`status=sent 250 OK` in mail.log).
+  opendkim firma `d=nexusdigitalbridge.it s=mail` su porta 8899.
 - `blogPosts.coverImage` non salvato dal POST admin → fix.
 - Email Resend (dead code) → `src/server/mail.ts` nodemailer con dominio corretto.
 - Nota convenzione: `sector_ids` e `institute_types` si salvano come **nomi**
@@ -68,12 +72,10 @@ Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
 
 ## Da fare (prossimi passi)
 
-1. **DNS Aruba — bloccante per le email** (`ops/DNS-RECORDS.md` con i record
-   esatti): SPF TXT `@`, DKIM TXT `mail._domainkey`, PTR OVH, DMARC opzionale.
-   Finché non pubblicati, Gmail/Outlook rifiutano le mail (550 unauthenticated).
-   opendkim firma già correttamente (`d=nexusdigitalbridge.it s=mail`).
-2. **Password reset utenti migrati**: comunicare agli utenti di usare
-   "password dimenticata" (funzionerà dopo punto 1) o reset via SQL.
+1. ~~DNS Aruba~~ **FATTO**: SPF+DKIM+DMARC pubblicati, mail a Gmail verificata.
+   Resta opzionale il PTR reverse su pannello OVH (migliora deliverability).
+2. **Password reset utenti migrati**: ora funzionante via email; comunicare agli
+   utenti di usare "password dimenticata".
 3. **EmaMonitor**: agganciare `/api/health` (SLO in `ops/SLO.md`).
 4. Pulizia: rimuovere `nexus-test` :8813 quando non serve più; pruning
    immagini/volumi docker (disco era al 93%, ora ~92% dopo pulizia).
@@ -84,5 +86,5 @@ Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
 
 - Disco server 90% (47G liberi) — attenzione alle immagini docker vecchie.
 - Credenziali Firebase admin non nel repo: export dati da coordinare.
-- Postfix non configurato: le email falliscono silenziosamente (log only).
+- ~~Postfix non configurato~~ risolto: postfix+opendkim attivi, DNS pubblicato.
 - llama-swap :11600 richiede API key (da env autorizzato, mai in git).
