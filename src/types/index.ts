@@ -1,5 +1,9 @@
-export type UserRole = 'Company' | 'Institute' | 'Admin';
+export type UserRole = 'Company' | 'Institute' | 'Admin' | 'SuperAdmin';
 export type UserStatus = 'Pending' | 'Approved' | 'Rejected';
+
+/** Ruoli con accesso all'area amministrativa (Admin e SuperAdmin). */
+export const isAdminRole = (role?: string | null): boolean =>
+  role === 'Admin' || role === 'SuperAdmin';
 
 export interface UserProfile {
   id: string;

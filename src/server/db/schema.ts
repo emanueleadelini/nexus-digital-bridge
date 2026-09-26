@@ -19,6 +19,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   role: text("role").notNull().default("Pending"),
+  previousRole: text("previous_role"),
   status: text("status").notNull().default("Pending"),
   firstName: text("first_name"),
   lastName: text("last_name"),

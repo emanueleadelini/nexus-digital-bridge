@@ -62,11 +62,12 @@ export function DashboardSidebar() {
   const { toast } = useToast();
   const { user, isLoading } = useMe();
 
-  const role = (user?.role?.toLowerCase() as "company" | "institute" | "admin") || "company";
+  const role = (user?.role?.toLowerCase() as "company" | "institute" | "admin" | "superadmin") || "company";
+  const isAdmin = role === "admin" || role === "superadmin";
 
   // Conteggio utenti pending (admin) + notifiche non lette (tutti)
   const { data: allUsers } = useApiData<(UserProfile & { profile?: { status?: string } | null })[]>(
-    role === "admin" ? "/api/admin/users" : null,
+    isAdmin ? "/api/admin/users" : null,
     30_000
   );
   const { data: notifications } = useApiData<AppNotification[]>(
@@ -74,13 +75,13 @@ export function DashboardSidebar() {
     15_000
   );
 
-  const pendingCount = role === "admin"
+  const pendingCount = isAdmin
     ? (allUsers || []).filter(u => u.status === "Pending" || u.profile?.status === "Pending").length
     : 0;
   const unreadCount = (notifications || []).filter(n => !n.readAt).length;
 
   const links = [
-    ...(role === "admin" ? adminLinks : [
+    ...(isAdmin ? adminLinks : [
       ...commonLinks,
       ...(role === "company" ? companyLinks : []),
       ...(role === "institute" ? instituteLinks : []),
@@ -167,7 +168,7 @@ export function DashboardSidebar() {
                   ? `${user.firstName} ${user.lastName}`
                   : user?.firstName || user?.name || 'Utente'}
               </div>
-              <div className="text-[10px] truncate capitalize text-slate-500">{role}</div>
+              <div className="text-[10px] truncate capitalize text-slate-500">{role === "superadmin" ? "Super Admin" : role}</div>
             </div>
           </div>
         </div>

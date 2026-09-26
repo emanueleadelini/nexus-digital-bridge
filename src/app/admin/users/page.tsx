@@ -16,12 +16,14 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Loader2
+  Loader2,
+  ShieldCheck
 } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { useApiData, apiFetch } from "@/lib/api";
+import { useApiData, apiFetch, useMe } from "@/lib/api";
+import { isAdminRole } from "@/types";
 import type { UserProfile, CompanyProfile, InstituteProfile } from "@/types";
 
 type UserWithProfile = UserProfile & { profile: (CompanyProfile | InstituteProfile) | null };
@@ -30,11 +32,14 @@ export default function AdminUsersPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const { user: me } = useMe();
+  const isSuperAdmin = me?.role === "SuperAdmin";
 
   const { data: users, isLoading, refetch } = useApiData<UserWithProfile[]>("/api/admin/users", 30_000);
 
   const companies = (users || []).filter(u => u.role === "Company");
   const institutes = (users || []).filter(u => u.role === "Institute");
+  const admins = (users || []).filter(u => isAdminRole(u.role));
 
   const handleUpdateStatus = async (userId: string, status: 'Approved' | 'Rejected') => {
     setUpdatingId(userId);
@@ -48,6 +53,21 @@ export default function AdminUsersPage() {
       refetch(true);
     } else {
       toast({ variant: "destructive", title: "Errore", description: "Impossibile aggiornare lo stato dell'utente." });
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, role: 'Admin' | 'revoke') => {
+    setUpdatingId(userId);
+    const res = await apiFetch(`/api/admin/users/${userId}`, { method: "PATCH", json: { role } });
+    setUpdatingId(null);
+    if (res.ok) {
+      toast({
+        title: role === 'Admin' ? "Admin assegnato" : "Ruolo Admin revocato",
+        description: role === 'Admin' ? "L'utente ora ha accesso all'area amministrativa." : "L'utente è tornato al suo ruolo precedente.",
+      });
+      refetch(true);
+    } else {
+      toast({ variant: "destructive", title: "Errore", description: (res.data as { error?: string }).error || "Impossibile aggiornare il ruolo." });
     }
   };
 
@@ -117,6 +137,9 @@ export default function AdminUsersPage() {
                       </span>
                     )}
                   </TabsTrigger>
+                  <TabsTrigger value="admins" className="rounded-lg gap-2">
+                    <ShieldCheck className="w-4 h-4" /> Amministratori
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="companies" className="mt-0">
@@ -175,6 +198,18 @@ export default function AdminUsersPage() {
                                     >
                                       <XCircle className="w-4 h-4 mr-1" />
                                       Rifiuta
+                                    </Button>
+                                  )}
+                                  {isSuperAdmin && company.status === 'Approved' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-primary border-primary/20 hover:bg-blue-50 rounded-lg h-8"
+                                      disabled={updatingId === company.id}
+                                      onClick={() => handleUpdateRole(company.id, 'Admin')}
+                                    >
+                                      <ShieldCheck className="w-4 h-4 mr-1" />
+                                      Rendi Admin
                                     </Button>
                                   )}
                                 </div>
@@ -242,6 +277,18 @@ export default function AdminUsersPage() {
                                       Rifiuta
                                     </Button>
                                   )}
+                                  {isSuperAdmin && inst.status === 'Approved' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-primary border-primary/20 hover:bg-blue-50 rounded-lg h-8"
+                                      disabled={updatingId === inst.id}
+                                      onClick={() => handleUpdateRole(inst.id, 'Admin')}
+                                    >
+                                      <ShieldCheck className="w-4 h-4 mr-1" />
+                                      Rendi Admin
+                                    </Button>
+                                  )}
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -254,6 +301,60 @@ export default function AdminUsersPage() {
                       </TableBody>
                     </Table>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="admins" className="mt-0">
+                  <div className="rounded-xl border border-slate-100 overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead>Amministratore</TableHead>
+                          <TableHead>Ruolo</TableHead>
+                          <TableHead className="text-right">Azioni</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {admins.length ? admins.map((a) => (
+                          <TableRow key={a.id}>
+                            <TableCell className="font-bold text-slate-700">
+                              <div className="flex flex-col">
+                                {a.name}
+                                <span className="text-[10px] text-slate-400 font-normal">{a.email}</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {a.role === 'SuperAdmin' ? (
+                                <Badge className="bg-purple-100 text-purple-700 border-none gap-1 font-bold h-6"><ShieldCheck className="w-3 h-3" /> Super Admin</Badge>
+                              ) : (
+                                <Badge className="bg-blue-100 text-blue-700 border-none gap-1 font-bold h-6"><ShieldCheck className="w-3 h-3" /> Admin</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {isSuperAdmin && a.role === 'Admin' && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-destructive border-destructive/20 hover:bg-red-50 rounded-lg h-8"
+                                  disabled={updatingId === a.id}
+                                  onClick={() => handleUpdateRole(a.id, 'revoke')}
+                                >
+                                  {updatingId === a.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-1" />}
+                                  Revoca Admin
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        )) : (
+                          <TableRow>
+                            <TableCell colSpan={3} className="text-center py-8 text-slate-400">Nessun amministratore.</TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {!isSuperAdmin && (
+                    <p className="text-xs text-slate-400 mt-3">Solo il Super Admin può nominare o revocare gli amministratori (reti aziende/scuole).</p>
+                  )}
                 </TabsContent>
               </Tabs>
             </CardContent>

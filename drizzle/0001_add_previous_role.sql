@@ -1,0 +1,1 @@
+ALTER TABLE "user" ADD COLUMN "previous_role" text;

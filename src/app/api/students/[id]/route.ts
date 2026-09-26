@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db/client";
 import { studentCvs } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
-import { requireUser } from "@/server/guard";
+import { requireUser, isAdminRole } from "@/server/guard";
 import { unlink } from "fs/promises";
 import path from "path";
 
@@ -16,7 +16,7 @@ export async function DELETE(
 
   const [cv] = await db.select().from(studentCvs).where(eq(studentCvs.id, id)).limit(1);
   if (!cv) return NextResponse.json({ error: "CV non trovato" }, { status: 404 });
-  if (user.role !== "Admin" && cv.instituteId !== user.id) {
+  if (!isAdminRole(user.role) && cv.instituteId !== user.id) {
     return NextResponse.json({ error: "Non autorizzato" }, { status: 403 });
   }
 

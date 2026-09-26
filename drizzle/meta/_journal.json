@@ -8,6 +8,13 @@
       "when": 1790423813692,
       "tag": "0000_init_selfhost",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790432991192,
+      "tag": "0001_add_previous_role",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import type { ChatMessage, Chat } from "@/types";
+import { isAdminRole } from "@/types";
 import { useAuthGuard, useApiData, apiFetch } from "@/lib/api";
 
 function ChatContent() {
@@ -143,7 +144,7 @@ function ChatContent() {
         <div className="w-80 bg-white border-r flex flex-col">
           <div className="p-6 border-b">
             <h2 className="text-xl font-headline font-bold text-primary">
-              {role === "Admin" ? "Tutte le Chat" : "Conversazioni"}
+              {isAdminRole(role) ? "Tutte le Chat" : "Conversazioni"}
             </h2>
           </div>
           <ScrollArea className="flex-1">
@@ -223,7 +224,7 @@ function ChatContent() {
               </div>
             </ScrollArea>
 
-            {role !== "Admin" && (
+            {!isAdminRole(role) && (
               <form onSubmit={handleSendMessage} className="p-6 bg-white border-t">
                 <div className="flex gap-4">
                   <Input

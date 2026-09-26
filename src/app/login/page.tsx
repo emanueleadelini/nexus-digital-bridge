@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { isAdminRole } from "@/types";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -49,7 +50,7 @@ export default function LoginPage() {
       const meRes = await fetch("/api/me", { credentials: "include" });
       const me = meRes.ok ? await meRes.json() : null;
 
-      if (me?.user?.role === "Admin") {
+      if (isAdminRole(me?.user?.role)) {
         router.push("/admin");
       } else if (me?.user?.status === "Pending") {
         router.push("/pending-approval");

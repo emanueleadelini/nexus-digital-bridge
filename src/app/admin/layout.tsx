@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMe } from "@/lib/api";
+import { isAdminRole } from "@/types";
 import { Loader2 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +16,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.replace("/login");
       return;
     }
-    if (user.role !== "Admin") {
+    if (!isAdminRole(user.role)) {
       router.replace("/dashboard");
     }
   }, [user, isLoading, router]);
@@ -28,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (user.role !== "Admin") return null;
+  if (!isAdminRole(user.role)) return null;
 
   return <>{children}</>;
 }

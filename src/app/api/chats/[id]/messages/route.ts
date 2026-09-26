@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireUser } from "@/server/guard";
+import { requireUser, isAdminRole } from "@/server/guard";
 import { getChatById, canAccessChat, getMessages, addMessage } from "@/server/data";
 
 export async function GET(
@@ -26,8 +26,8 @@ export async function POST(
   if (error) return error;
   const { id } = await params;
 
-  // Admin e' audit read-only: non puo' scrivere nelle chat
-  if (user.role === "Admin") {
+  // Admin/SuperAdmin audit read-only: non possono scrivere nelle chat
+  if (isAdminRole(user.role)) {
     return NextResponse.json({ error: "Admin solo lettura" }, { status: 403 });
   }
 

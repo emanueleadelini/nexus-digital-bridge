@@ -14,6 +14,7 @@ import {
 import { eq, and, or, desc, asc, isNull, sql, ne } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import { calculateMatchScore } from "./matching";
+import { isAdminRole } from "@/types";
 
 // ---------- lookup maps ----------
 
@@ -123,7 +124,7 @@ export async function instituteHasMatchWith(
 
 export async function getChatsForUser(userId: string, role: string) {
   const where =
-    role === "Admin"
+    isAdminRole(role)
       ? undefined
       : role === "Company"
         ? eq(chats.companyId, userId)
@@ -141,7 +142,7 @@ export async function getChatById(id: string) {
 }
 
 export function canAccessChat(chat: { companyId: string; instituteId: string }, userId: string, role: string) {
-  return role === "Admin" || chat.companyId === userId || chat.instituteId === userId;
+  return isAdminRole(role) || chat.companyId === userId || chat.instituteId === userId;
 }
 
 export async function createChat(params: {

@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { isAdminRole } from "@/types";
 
 export interface MeUser {
   id: string;
   email: string;
   name: string;
-  role: "Company" | "Institute" | "Admin";
+  role: "Company" | "Institute" | "Admin" | "SuperAdmin";
   status: "Pending" | "Approved" | "Rejected";
   firstName?: string | null;
   lastName?: string | null;
@@ -66,7 +67,7 @@ export function useAuthGuard(requiredRole?: MeUser["role"]) {
       router.replace("/rejected");
       return;
     }
-    if (requiredRole && user.role !== requiredRole && user.role !== "Admin") {
+    if (requiredRole && user.role !== requiredRole && !isAdminRole(user.role)) {
       router.replace("/dashboard");
     }
   }, [user, isLoading, router, requiredRole]);
