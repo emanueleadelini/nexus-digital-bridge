@@ -26,28 +26,45 @@ Ultimo checkpoint: 2026-09-26 (sessione devin, migrazione self-host completata n
 - Chat: azienda→istituto ✅; istituto→azienda con match → dedup ✅;
   istituto→azienda senza match → **403** ✅; estraneo su messaggi → **403** ✅
 - Upload PDF → `pdf_path` salvato su volume; download `/api/cv/[id]/pdf` ✅
+  - policy: istituto solo i propri (403 altrui), company/admin 200
+- **Parsing AI E2E verificato**: `pdftotext` (poppler in Docker) estrae testo,
+  LLM OVH Kepler (`LLM_BASE_URL=https://oai.endpoints.kepler.ai.cloud.ovh.net/v1`,
+  model `gpt-oss-120b`, key da `/root/shared/chatmate.env`) → nome/classe/
+  summary/settori/skills salvati in DB ✅
+- CV AI-parsed → match 90% con azienda ("ICT e Digitale"), `chatStarted` ✅
 - Notifiche in-app + badge sidebar ✅
+- Route pubbliche: `/api/content`, `/api/blog`, `/api/blog/[id]`,
+  `/api/stats`, landing, login → tutte 200 ✅
+- Admin: `/api/admin/stats|users|chats|blog` (con `coverImage`) → 200 ✅
 
 ## Bug risolti in sessione
 
 - `chats.creator_id` aggiunto a schema+migration (era usato ma mancante).
 - `/api/admin/demo` DELETE cancellava TUTTI gli utenti non-admin → fix per id `demo-*`.
 - `/api/matches` ritorna `{role,matches|students}` → page unwrap corretto.
-- `pdf-parse` v2 richiede DOMMatrix/canvas → downgrade a **1.1.1** + `@types`.
+- `pdf-parse` v2 richiede DOMMatrix/canvas; **1.1.1** falliva con `bad XRef`
+  su PDF validi (pdf.js 1.10 vendored) → **sostituito con `pdftotext` (poppler)**
+  via `apk add poppler-utils` nel Dockerfile runner; deps rimosse.
+- llama-swap locale binda `127.0.0.1:11600` → irraggiungibile dal bridge docker;
+  puntato `LLM_BASE_URL` a OVH Kepler (rotta autorizzata chatmate.env).
 - `blogPosts.coverImage` non salvato dal POST admin → fix.
 - Email Resend (dead code) → `src/server/mail.ts` nodemailer con dominio corretto.
+- Nota convenzione: `sector_ids` e `institute_types` si salvano come **nomi**
+  (non UUID) in tutto il flusso (register form, CV form, AI output).
 
 ## Da fare (prossimi passi)
 
-1. **Fix parsing AI**: pdf-parse 1.1.1 in rebuild — verificare estrazione testo
-   + parseCVText con llama-swap reale (env `LLM_API_KEY` già valorizzata).
-2. **Postfix**: mailer fallisce `ECONNREFUSED 172.17.0.1:25` — host non ha SMTP.
-   Opzioni: postfix container (pattern polouniversitariosantostefano) o host.
-3. `/api/blog/[id]` e `/api/content` pubbliche aggiunte — da verificare in smoke.
-4. Deploy: rebuild `nexus-selfhost:test` con fix, smoke completo, poi cutover
-   nginx su :8812 (stop vecchio container Firebase, rename).
-5. Fase 4 dati: decidere se recuperare export Firestore (serve service account).
-6. Fase 5: ChatMate + EmaMonitor + THREAT-MODEL/SLO/GDPR (CV minori).
+1. ~~Fix parsing AI~~ — **risolto** con pdftotext + OVH Kepler, E2E verificato.
+2. **SMTP/Postfix**: mailer fallisce `ECONNREFUSED 172.17.0.1:25` — host non ha
+   SMTP e non esiste sidecar. Dominio ha MX Aruba (mx.nexusdigitalbridge.it).
+   Opzioni: (a) postfix container self-contained (deliverability a rischio:
+   IP OVH senza PTR/SPF→spam), (b) relay autenticato Aruba smtps.aruba.it:465
+   (serve casella + credenziali, deliverability buona), (c) deferire.
+   **Decisione bloccante da prendere col Capo.**
+3. Deploy: smoke E2E quasi completo su :8813; poi cutover nginx su :8812
+   (stop vecchio container Firebase, rename). Prima pulire dati di test.
+4. Fase 4 dati: decidere se recuperare export Firestore (serve service account).
+5. Fase 5: ChatMate + EmaMonitor + THREAT-MODEL/SLO/GDPR (CV minori).
 
 ## Rischi aperti
 
