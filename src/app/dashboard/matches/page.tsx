@@ -45,12 +45,18 @@ export default function MatchesPage() {
 
   const isCompany = user?.role === "Company";
 
-  const { data: matchesData, isLoading } = useApiData<MatchResult[] | InstituteMatchEntry[]>(
+  const { data: matchesData, isLoading } = useApiData<
+    { role: "Company"; matches: MatchResult[] } | { role: "Institute"; students: InstituteMatchEntry[] }
+  >(
     user ? "/api/matches" : null,
     30_000
   );
 
-  const matches = (matchesData || []) as (MatchResult | InstituteMatchEntry)[];
+  const matches: (MatchResult | InstituteMatchEntry)[] = matchesData
+    ? "matches" in matchesData
+      ? matchesData.matches
+      : matchesData.students
+    : [];
 
   const filteredMatches = useMemo(() => {
     if (!searchTerm) return matches;
