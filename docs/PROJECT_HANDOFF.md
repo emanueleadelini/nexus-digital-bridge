@@ -1,6 +1,13 @@
 # PROJECT_HANDOFF — Nexus Digital Bridge
 
-Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
+Ultimo checkpoint: 2026-09-28 (sessione devin — ripresa post-spegnimento PC)
+
+Segnale di ripresa 2026-09-28: server repo riconciliato a `91b62b6`
+(ff-only, solo docs), produzione `/api/health` → `db:up`, DNS SPF+DKIM
+propagati e confermati, prober EmaMonitor installato+cron (prova del fuoco OK).
+Prossimo passo: pulizia nexus-test/pruning docker quando il coordinatore
+rilascia la corsia storage (disco era ~99%, 6.6G liberi); comunicazione reset
+password agli utenti migrati richiede via libera del Capo su invii reali.
 
 ## Dove siamo — STATO: LIVE SU STACK SELF-HOSTED
 
@@ -76,7 +83,11 @@ Ultimo checkpoint: 2026-09-26 (sessione devin — **CUTOVER ESEGUITO**)
    Resta opzionale il PTR reverse su pannello OVH (migliora deliverability).
 2. **Password reset utenti migrati**: ora funzionante via email; comunicare agli
    utenti di usare "password dimenticata".
-3. **EmaMonitor**: agganciare `/api/health` (SLO in `ops/SLO.md`).
+3. ~~EmaMonitor~~ **FATTO 2026-09-28**: prober esterno
+   `/root/projects/prober-siti-clienti/prober_nexus_digital_bridge.py` in cron
+   ogni 5 min — 5 controlli (`/api/health` db:up, home, login, register,
+   sectors) → `health-red` su `/ingest` a RED; prova del fuoco accettata
+   (`200 {"ok":true}`). Registrato in MANUALE_INTEGRAZIONE_EMAMONITOR §7.
 4. Pulizia: rimuovere `nexus-test` :8813 quando non serve più; pruning
    immagini/volumi docker (disco era al 93%, ora ~92% dopo pulizia).
 5. Dopo N giorni di stabilità: eliminare `nexus-firebase-legacy`.
