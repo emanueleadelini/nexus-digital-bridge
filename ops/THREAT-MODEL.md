@@ -22,7 +22,10 @@ messaggi chat. Minacce valutate con metodo STRIDE-lite.
 - Registrazione aperta ma stato `Pending`: nessun accesso ai dati prima
   dell'approvazione admin (`requireUser` default Approved). ✅
 - Better Auth: password hash (scrypt), cookie httpOnly session DB-backed. ✅
-- Nessun ruolo auto-assegnato oltre Company/Institute; Admin solo via DB. ✅
+- Gerarchia ruoli: `SuperAdmin` (solo Capo, non modificabile via API) >
+  `Admin` (reti aziende/scuole) > `Company`/`Institute`. Promozione/revoca
+  Admin SOLO via `PATCH /api/admin/users/:id` da SuperAdmin, con ripristino
+  `previous_role`. ✅
 - TODO: rate limit su login/register (attualmente assente — rischio brute force).
   Mitigazione futura: middleware rate-limit o nginx `limit_req_zone`.
 
@@ -30,8 +33,10 @@ messaggi chat. Minacce valutate con metodo STRIDE-lite.
 
 - Update profilo: solo il proprio record (id dalla sessione). ✅
 - CV update/delete: solo `instituteId === user.id`. ✅
-- Admin endpoints: `requireUser({role:"Admin"})` server-side. ✅
-- Cambio stato utente (approve/reject): solo admin. ✅
+- Admin endpoints: `requireUser({role:"Admin"})` server-side (accetta Admin e
+  SuperAdmin via `isAdminRole`). ✅
+- Cambio stato utente (approve/reject): Admin/SuperAdmin; cambio ruolo Admin:
+  solo SuperAdmin. ✅
 
 ### Information disclosure
 
@@ -70,12 +75,15 @@ messaggi chat. Minacce valutate con metodo STRIDE-lite.
 1. **CV di minori leggibili da ogni azienda approvata**: mitigato solo
    dall'approvazione manuale admin. Raccomandato: registrazione azienda richieda
    P.IVA verificabile + log accessi PDF (`cv_views` audit table — roadmap).
-2. **Nessun rate limit**: da aggiungere prima del cutover (nginx `limit_req`).
-3. **SMTP**: mail non cifrate end-to-end se postfix locale; contenuto include
-   solo link/nomi, no dati sensibili. OK.
+2. **Nessun rate limit**: da aggiungere (nginx `limit_req` o middleware).
+3. **SMTP**: postfix host + OpenDKIM attivi (firma `d=nexusdigitalbridge.it
+   s=mail`); SPF/DKIM/DMARC pubblicati su Aruba 26/09. Contenuto mail: solo
+   link/nomi, no dati sensibili. OK.
 
 ## Superfici escluse
 
-- llama-swap/OVH Kepler: il testo CV esce dalla macchina verso endpoint OVH
-  (stesso provider IaaS, rotta autorizzata). Documentare nel data-map GDPR.
+- LLM esterno: il testo CV esce verso **Regolo AI** (api.regolo.ai, provider
+  italiano) primario e **OVH Kepler** come fallback — entrambi UE, rotta
+  autorizzata dal Capo. Documentare nel data-map GDPR.
 - Nessun dato di pagamento, nessuna integrazione terze parti attiva.
+- Firebase/GCP: dismesso dal runtime (dati migrati in Postgres locale 26/09).

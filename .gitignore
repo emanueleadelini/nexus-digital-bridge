@@ -45,3 +45,8 @@ firebase-debug.log
 firestore-debug.log
 # Sentry Config File
 .env.sentry-build-plugin
+_aruba_dns.py
+_mcp_browser.py
+_staging_manuali/
+_add_frontmatter.py
+_fix_manuals.py

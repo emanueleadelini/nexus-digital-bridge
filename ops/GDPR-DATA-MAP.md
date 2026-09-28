@@ -27,10 +27,11 @@ studenti maggiorenni o interesse legittimo istruzione-formazione).
 
 | Destinazione | Dati | Motivo | Base |
 |---|---|---|---|
-| OVH Kepler AI (`oai.endpoints.kepler.ai.cloud.ovh.net`) | testo CV | parsing AI | stesso fornitore IaaS, UE |
-| SMTP locale→destinatari | nome + email + link | notifiche | necessità contrattuale |
+| Regolo AI (`api.regolo.ai`, primario) | testo CV | parsing AI | provider italiano, UE |
+| OVH Kepler AI (fallback) | testo CV | parsing AI se Regolo down | stesso fornitore IaaS, UE |
+| Postfix host → destinatari | nome + email + link | notifiche | necessità contrattuale; SPF+DKIM+DMARC attivi |
 
-Nessun trasferimento extra-UE (OVH = provider francese). Firebase/GCP eliminato.
+Nessun trasferimento extra-UE (Regolo = italiano, OVH = francese). Firebase/GCP eliminato.
 
 ## Diritti interessato — stato implementazione
 
