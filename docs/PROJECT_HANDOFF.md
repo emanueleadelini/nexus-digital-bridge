@@ -1,13 +1,34 @@
 # PROJECT_HANDOFF — Nexus Digital Bridge
 
-Ultimo checkpoint: 2026-09-28 (sessione devin — ripresa post-spegnimento PC)
+Ultimo checkpoint: 2026-09-28 ~08:45 UTC (sessione devin — ripresa post-spegnimento PC)
 
-Segnale di ripresa 2026-09-28: server repo riconciliato a `91b62b6`
-(ff-only, solo docs), produzione `/api/health` → `db:up`, DNS SPF+DKIM
-propagati e confermati, prober EmaMonitor installato+cron (prova del fuoco OK).
-Prossimo passo: pulizia nexus-test/pruning docker quando il coordinatore
-rilascia la corsia storage (disco era ~99%, 6.6G liberi); comunicazione reset
-password agli utenti migrati richiede via libera del Capo su invii reali.
+## STATO PER RIPRESA — leggi prima questo
+
+**Produzione live e sana.** `nexusdigitalbridge.it` serve lo stack self-hosted
+(Next.js + Postgres + Better Auth, container `nexus-digital-bridge` su
+`127.0.0.1:8812`, restart `unless-stopped`). Verificato 28/09: `/api/health` →
+`{"status":"ok","db":"up"}`, tutte le route pubbliche 200.
+
+**HEAD**: PC e server allineati su `feat/selfhost-backend`. Repo server:
+`/root/projects/nexus-digital-bridge`. `main` = storico Firebase (NON usare).
+
+**Email**: funzionanti. SPF+DKIM+DMARC pubblicati su Aruba; reset password a
+Gmail accettato. `postfix` host + `opendkim` :8899. Opzionale: PTR reverse OVH.
+
+**Monitoraggio**: prober EmaMonitor attivo (cron */5min) →
+`/root/projects/prober-siti-clienti/prober_nexus_digital_bridge.py`,
+log `/var/log/prober_nexus_digital_bridge.log`, product=`nexus-digital-bridge`.
+
+**Credenziali**: SuperAdmin pw in `/root/.nexus-admin-pw` (600). Utenti migrati:
+password non migrabili → "password dimenticata" ora funziona.
+
+**Vincoli attivi al checkpoint**: disco server ~99% (6.6G liberi) — corsia
+storage in carico al coordinatore Codex (ricevuta
+`/root/evidence/server-repair-20260928/SERVICE_RECOVERY_RECEIPT.json`);
+knowledge sync globale in gate (conflitto RAG su `ad-next-billing`, non Nexus).
+
+Segnale di ripresa registrato: repo riconciliato, doc ops allineati
+(SLO/THREAT-MODEL/GDPR-DATA-MAP), prober installato, commit `086aca1`.
 
 ## Dove siamo — STATO: LIVE SU STACK SELF-HOSTED
 
@@ -77,25 +98,40 @@ password agli utenti migrati richiede via libera del Capo su invii reali.
 - Nota convenzione: `sector_ids` e `institute_types` si salvano come **nomi**
   (non UUID) in tutto il flusso (register form, CV form, AI output).
 
-## Da fare (prossimi passi)
+## Da fare — prossima sessione (piano dettagliato da concordare col Capo)
 
-1. ~~DNS Aruba~~ **FATTO**: SPF+DKIM+DMARC pubblicati, mail a Gmail verificata.
-   Resta opzionale il PTR reverse su pannello OVH (migliora deliverability).
-2. **Password reset utenti migrati**: ora funzionante via email; comunicare agli
-   utenti di usare "password dimenticata".
-3. ~~EmaMonitor~~ **FATTO 2026-09-28**: prober esterno
-   `/root/projects/prober-siti-clienti/prober_nexus_digital_bridge.py` in cron
-   ogni 5 min — 5 controlli (`/api/health` db:up, home, login, register,
-   sectors) → `health-red` su `/ingest` a RED; prova del fuoco accettata
-   (`200 {"ok":true}`). Registrato in MANUALE_INTEGRAZIONE_EMAMONITOR §7.
-4. Pulizia: rimuovere `nexus-test` :8813 quando non serve più; pruning
-   immagini/volumi docker (disco era al 93%, ora ~92% dopo pulizia).
-5. Dopo N giorni di stabilità: eliminare `nexus-firebase-legacy`.
-6. Threat model/SLO/GDPR bozze in `ops/` — da completare col Capo.
+### Decide il Capo
+- **Onboarding utenti migrati**: email pronte (reset self-service attivo);
+  serve via libera su invio comunicazione agli 8 utenti reali.
+- **DPA/nomine GDPR** con istituti (fuori scope tecnico).
+- **PTR reverse** su pannello OVH (51.210.214.63 → nexusdigitalbridge.it) —
+  opzionale, migliora deliverability.
+
+### Tecnici, da pianificare
+1. **Pulizia storage** (dipende da coordinatore — disco ~99%): rimuovere
+   `nexus-test` :8813, pruning immagini/volumi inutilizzati, poi dopo N giorni
+   di stabilità eliminare `nexus-firebase-legacy`.
+2. **Rate limiting** login/register + upload (nginx `limit_req` o middleware) —
+   unico rischio residuo medio segnalato nel threat model.
+3. **Magic-bytes check** su upload PDF (`%PDF-` header).
+4. **GDPR diritti**: endpoint export JSON (portabilità) + cancellazione account
+   cascade (CV+PDF+messaggi) — ora parziale: DELETE student rimuove PDF ✅,
+   delete account TODO UI.
+5. **Retention policy** log + volume upload (job o procedura).
+6. **Audit log strutturato** azioni admin (roadmap).
+7. **Backup Postgres** policy (esterno al container).
+8. Baseline SLO reale dopo 1-2 settimane di traffico (target in `ops/SLO.md`).
+
+### Completati in questo ciclo (non rifare)
+DNS/SPF/DKIM/DMARC ✅ · email a Gmail ✅ · EmaMonitor prober+cron ✅ ·
+gerarchia ruoli ✅ · migrazione dati ✅ · cutover ✅ · doc ops allineati ✅
 
 ## Rischi aperti
 
-- Disco server 90% (47G liberi) — attenzione alle immagini docker vecchie.
-- Credenziali Firebase admin non nel repo: export dati da coordinare.
-- ~~Postfix non configurato~~ risolto: postfix+opendkim attivi, DNS pubblicato.
-- llama-swap :11600 richiede API key (da env autorizzato, mai in git).
+- **Disco server ~99%** (6.6G liberi al 28/09) — coordinatore in carico;
+  nessuna operazione storage da agenti ripresi.
+- **Rate limit assente** su auth/upload — mitigazione pianificata (punto 2).
+- **CV minori visibili a tutte le aziende approvate** — mitigato da approvazione
+  manuale; rivalutare pseudonimizzazione (nota GDPR).
+- Credenziali Firebase admin non nel repo (export fatto via OAuth PC).
+- Knowledge sync Nexus accodato dietro gate globale (coordinatore).
